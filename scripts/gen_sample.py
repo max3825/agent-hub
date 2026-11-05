@@ -304,5 +304,57 @@ for i in items:
     if i["name"] in ("slash-standup","docker-slimmer","cost-tracker","mod-token-meter","kubernetes-debugger"):
         i["firstSeen"] = (NOW - timedelta(days=2)).isoformat().replace("+00:00","Z")
 
+# ── Champs ajoutés après la v1 : dates de création, tendances, aperçus, agents, confiance des mods ──
+OUTLINES = {"skill": ["Quand l'utiliser", "Étapes", "Exemples", "Limites connues"], "hook": ["Événements", "Configuration", "Variables d'environnement"],
+            "mod": ["Installation", "Options", "Personnalisation"]}
+CONF = [0.95, 0.9, 0.85, 0.75, 0.6]
+for n, it in enumerate(items):
+    h = int(it["id"][:6], 16)
+    age = 150 + h % 380                                     # âge de l'élément (jours)
+    it["createdAt"] = (NOW - timedelta(days=age)).isoformat().replace("+00:00", "Z")
+    it["createdExact"] = h % 5 != 0                          # ~20 % : approximation (création du dépôt)
+    d7 = max(0, int(it["stars"] * (0.002 + (h % 7) * 0.003)))
+    if it["lastCommit"] > (NOW - timedelta(days=45)).isoformat():
+        it["trend"] = {"d7": d7, "d30": d7 * 3 + h % 20}
+    en = it["summary_en"]
+    it["preview"] = f"{en}\n\nCet élément de démonstration illustre l'aperçu affiché dans la fiche : seuls les premiers paragraphes du fichier principal sont repris, le reste est consultable sur la source."
+    it["outline"] = OUTLINES[it["type"]]
+    sig = {"claude-code": "écosystème de référence (par défaut)"}
+    for a in it["agents"]:
+        if a != "claude-code":
+            sig[a] = "fichiers spécifiques dans le dépôt" if h % 2 else "mentionné (topics, description ou README)"
+    it["agentSignals"] = sig
+    if it["type"] == "mod":
+        it["modConfidence"] = CONF[h % len(CONF)]
+
 json.dump(items, open("data/sample-items.json","w"), ensure_ascii=False, indent=1)
 print(len(items), "items", {t: sum(1 for i in items if i['type']==t) for t in ('skill','hook','mod')})
+
+# ── Statistiques de santé (démo) ──
+stats = {
+  "generatedAt": (NOW - timedelta(hours=3)).isoformat().replace("+00:00", "Z"), "total": len(items),
+  "counts": {t: sum(1 for i in items if i["type"] == t) for t in ("skill", "hook", "mod")},
+  "risk": {l: sum(1 for i in items if i["risk"]["level"] == l) for l in ("low", "medium", "high", "n/a")},
+  "repos": 600, "analyzed": 212, "from_cache": 341, "rejected": 38, "errors": 9, "stale_cache": 0, "truncated": False,
+  "duplicates_removed": 47, "mods_dropped_low_confidence": 23, "requests": 2840, "duration_s": 1260,
+  "creation_lookups": 120, "exact_created": 41,
+  "rejected_by_reason": {"low_stars": 21, "inactive": 9, "archived": 5, "fork": 3},
+  "adapters": {"github_topics": {"candidates": 1047, "error": None}, "marketplaces": {"candidates": 166, "error": None},
+               "awesome_lists": {"candidates": 267, "error": None}, "skills_sh": {"candidates": 67, "error": None},
+               "github_code_search": {"candidates": 587, "error": None}},
+  "by_origin": {o: sum(1 for i in items if i["source"]["origin"] == o) for o in ("github", "skills.sh", "marketplace", "awesome")},
+  "demo": True,
+}
+json.dump(stats, open("data/sample-stats.json", "w"), ensure_ascii=False, indent=1)
+
+# ── Modèle sémantique de démo (nécessite numpy ; fichier versionné pour que `npm run dev` marche sans Python) ──
+try:
+    import sys; sys.path.insert(0, ".")
+    from crawler.models import Item
+    from crawler.semantic import build_model
+    m = build_model([Item.model_validate(i) for i in items])
+    if m:
+        json.dump(m, open("data/sample-semantic.json", "w"), separators=(",", ":"))
+        print("semantic ok:", m["k"], "dims,", len(m["vocab"]), "termes")
+except ImportError:
+    print("numpy absent : data/sample-semantic.json non régénéré")

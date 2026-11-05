@@ -10,7 +10,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 const C = ({ children }: { children: React.ReactNode }) => <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-ink">{children}</code>;
 
-export default function About({ onBack, repoUrl }: { onBack: () => void; repoUrl: string }) {
+export default function About({ onBack, repoUrl, onStats }: { onBack: () => void; repoUrl: string; onStats: () => void }) {
   return (
     <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="mx-auto max-w-3xl px-4 py-10">
       <button onClick={onBack} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"><ArrowLeft className="h-4 w-4" />Retour à l'annuaire</button>
@@ -26,7 +26,7 @@ export default function About({ onBack, repoUrl }: { onBack: () => void; repoUrl
       <Section title="Sources et fréquence">
         <p>Dépôts GitHub trouvés via des topics (<C>claude-code</C>, <C>agent-skills</C>…) et la recherche de code, marketplaces de plugins (<C>marketplace.json</C>), listes « awesome » et, de façon optionnelle, l'annuaire skills.sh.</p>
         <p>Une GitHub Action relance le tout <strong className="text-ink">toutes les 12 heures</strong>, régénère l'index, reconstruit et redéploie le site. La date de dernière mise à jour s'affiche sous le titre.</p>
-        <p>Les résumés sont courts, générés automatiquement (ou repris de la description de l'auteur) : en cas de doute, la source fait foi.</p>
+        <p>Les résumés sont courts, générés automatiquement (ou repris de la description de l'auteur) : en cas de doute, la source fait foi. <button onClick={onStats} className="underline hover:text-ink">Voir la santé du dernier crawl</button>.</p>
       </Section>
 
       <Section title="Le niveau de risque : une heuristique, pas un audit">

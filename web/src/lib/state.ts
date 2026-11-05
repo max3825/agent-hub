@@ -8,7 +8,10 @@ export interface UiState {
   sort: SortKey;
   filters: Filters;
   item: string | null;
-  page: "home" | "about";
+  page: "home" | "about" | "favs" | "stats";
+  /** Sélection partagée par lien (?page=favs&ids=a,b). */
+  ids: string[];
+  semantic: boolean;
 }
 
 const list = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
@@ -16,22 +19,29 @@ const list = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
 export function parseUrl(search: string): UiState {
   const p = new URLSearchParams(search);
   const type = TYPES.includes(p.get("type") as ItemType) ? (p.get("type") as ItemType) : "skill";
-  const sort = (["relevance", "stars", "recent", "new"] as const).find((s) => s === p.get("sort")) ?? "relevance";
+  const sort = (["relevance", "stars", "recent", "new", "trending", "created"] as const).find((s) => s === p.get("sort")) ?? "relevance";
   return {
     type, q: p.get("q") ?? "", sort,
     filters: {
       agents: list(p.get("agent")), tags: list(p.get("tag")), licenses: list(p.get("lic")),
       risks: list(p.get("risk")) as RiskLevel[],
       activityDays: Number(p.get("act")) || 0, minStars: Number(p.get("stars")) || 0,
+      newDays: Number(p.get("new")) || 0, sureOnly: p.get("sure") === "1",
     },
     item: p.get("item"),
-    page: p.get("page") === "about" ? "about" : "home",
+    page: (["about", "favs", "stats"] as const).find((x) => x === p.get("page")) ?? "home",
+    ids: list(p.get("ids")), semantic: p.get("sem") !== "0",
   };
 }
 
 export function buildUrl(s: UiState): string {
   const p = new URLSearchParams();
-  if (s.page === "about") { p.set("page", "about"); return "?" + p; }
+  if (s.page !== "home") {
+    p.set("page", s.page);
+    if (s.page === "favs" && s.ids.length) p.set("ids", s.ids.join(","));
+    if (s.item) p.set("item", s.item);
+    return "?" + p;
+  }
   p.set("type", s.type);
   if (s.q) p.set("q", s.q);
   if (s.sort !== "relevance") p.set("sort", s.sort);
@@ -42,6 +52,9 @@ export function buildUrl(s: UiState): string {
   if (f.risks.length) p.set("risk", f.risks.join(","));
   if (f.activityDays) p.set("act", String(f.activityDays));
   if (f.minStars) p.set("stars", String(f.minStars));
+  if (f.newDays) p.set("new", String(f.newDays));
+  if (f.sureOnly) p.set("sure", "1");
+  if (!s.semantic) p.set("sem", "0");
   if (s.item) p.set("item", s.item);
   return "?" + p.toString();
 }

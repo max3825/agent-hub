@@ -1,5 +1,5 @@
 import { memo, useMemo, type ReactNode } from "react";
-import { AlertTriangle, ShieldAlert, ShieldCheck, Star } from "lucide-react";
+import { AlertTriangle, HelpCircle, ShieldAlert, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import type { ItemType, RiskLevel } from "../lib/types";
 import { RISK_META, TYPE_SINGULAR, agentLabel, agentShort, compact, escapeRegExp } from "../lib/format";
 
@@ -114,5 +114,27 @@ export function EmptyState({ title, hint, action }: { title: string; hint: strin
       <p className="mt-1 text-sm text-muted">{hint}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
+  );
+}
+
+
+/** Gain d'étoiles sur 7 jours (si connu et positif). */
+export function TrendBadge({ d7 }: { d7?: number }) {
+  if (!d7 || d7 <= 0) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-ok" title="Étoiles gagnées depuis le relevé d'il y a ~7 jours">
+      <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />+{d7.toLocaleString("fr-FR")}<span className="sr-only"> étoiles cette semaine</span>
+    </span>
+  );
+}
+
+/** Mods : la détection repose sur des heuristiques ; en dessous de 0,7 de confiance, on le dit. */
+export function ConfidenceBadge({ value }: { value?: number }) {
+  if (value === undefined || value >= 0.7) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-line px-1.5 py-0.5 text-[11px] text-subtle"
+      title={`Confiance de la détection : ${Math.round(value * 100)} %. Ce mod a été repéré par heuristique ; vérifiez la source.`}>
+      <HelpCircle className="h-3 w-3" aria-hidden="true" />Détection incertaine
+    </span>
   );
 }

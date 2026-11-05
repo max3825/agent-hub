@@ -75,11 +75,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CRAWLER_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # optionnel (vide → résumés de repli)
           MAX_SUMMARIES_PER_RUN: "300"                           # garde-fou de budget
+          # Budget de temps : au-delà, le crawl s'arrête proprement et les dépôts restants reprennent leur
+          # dernière analyse (cache) → le site ne rétrécit jamais et le prochain run continue où celui-ci s'est arrêté.
+          CRAWL_MAX_MINUTES: "42"
         run: |
           ARGS=""
           if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
-          # Un push sert à valider rapidement : crawl réduit (le cron et le lancement manuel gardent le budget complet).
-          if [ "${{ github.event_name }}" = "push" ]; then ARGS="$ARGS --limit 60"; fi
           if [ "${{ inputs.no_summaries }}" = "true" ]; then ARGS="$ARGS --no-summaries"; fi
           python -m crawler $ARGS
 
@@ -93,6 +94,8 @@ jobs:
         working-directory: web
         env:
           DATA_SOURCE: real
+          # URL publique : liens canoniques, sitemap.xml et aperçus Open Graph des pages /i/<id>/
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
           npm ci
           npm run build

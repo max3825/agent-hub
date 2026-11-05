@@ -1,7 +1,8 @@
 import { RotateCcw } from "lucide-react";
 import { agentLabel, RISK_META } from "../lib/format";
-import { emptyFilters, type Facets, type Filters, type RiskLevel } from "../lib/types";
+import { emptyFilters, type Facets, type Filters, type ItemType, type RiskLevel } from "../lib/types";
 
+const NEWNESS = [[0, "Peu importe"], [7, "7 jours"], [30, "30 jours"]] as const;
 const ACTIVITY = [[0, "Peu importe"], [30, "30 jours"], [90, "3 mois"], [365, "1 an"]] as const;
 const STARS = [0, 10, 100, 500, 1000];
 
@@ -27,7 +28,7 @@ function Check({ label, count, checked, onChange }: { label: string; count?: num
 
 const toggle = <T,>(arr: T[], v: T) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
-export function FiltersPanel({ facets, filters, onChange }: { facets: Facets; filters: Filters; onChange: (f: Filters) => void }) {
+export function FiltersPanel({ facets, filters, onChange, type }: { facets: Facets; filters: Filters; onChange: (f: Filters) => void; type: ItemType }) {
   const active = JSON.stringify(filters) !== JSON.stringify(emptyFilters);
   return (
     <div className="text-sm">
@@ -47,6 +48,21 @@ export function FiltersPanel({ facets, filters, onChange }: { facets: Facets; fi
       <Group title="Niveau de risque" hint="Heuristique automatique (motifs de commandes suspects). Ce n'est pas un audit : relisez toujours le code avant d'installer.">
         {facets.risks.map(([r, n]) => <Check key={r} label={RISK_META[r as RiskLevel]?.label ?? r} count={n} checked={filters.risks.includes(r as RiskLevel)} onChange={() => onChange({ ...filters, risks: toggle(filters.risks, r as RiskLevel) })} />)}
       </Group>
+
+      <Group title="Nouveautés (repérés depuis)">
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Repérés depuis">
+          {NEWNESS.map(([d, l]) => (
+            <button key={d} role="radio" aria-checked={filters.newDays === d} onClick={() => onChange({ ...filters, newDays: d })}
+              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${filters.newDays === d ? "border-accent bg-accent/10 text-ink" : "border-line text-muted hover:border-line-strong hover:text-ink"}`}>{l}</button>
+          ))}
+        </div>
+      </Group>
+
+      {type === "mod" && (
+        <Group title="Fiabilité de détection" hint="Les mods n'ont pas de format standard : ils sont repérés par heuristique, avec un score de confiance.">
+          <Check label="Détections fiables uniquement" checked={filters.sureOnly} onChange={() => onChange({ ...filters, sureOnly: !filters.sureOnly })} />
+        </Group>
+      )}
 
       <Group title="Dernière activité">
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Dernière activité">

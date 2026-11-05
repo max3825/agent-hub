@@ -1,37 +1,63 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertTriangle, Check, Copy, ExternalLink, ShieldAlert, X } from "lucide-react";
-import type { Item } from "../lib/types";
+import { AlertTriangle, ExternalLink, Link2, ShieldAlert, X } from "lucide-react";
+import type { Item, ItemDetail } from "../lib/types";
 import { agentLabel, fullDate, timeAgo, TYPE_BLURB, RISK_META } from "../lib/format";
-import { AgentPills, GithubIcon, RiskBadge, Stars, TypeBadge } from "./ui";
+import { loadDetail } from "../lib/details";
+import { installOptions, shareUrl } from "../lib/install";
+import { CopyButton, copyText } from "./CopyButton";
+import { FavButton } from "./FavButton";
+import { AgentPills, ConfidenceBadge, GithubIcon, RiskBadge, Stars, TrendBadge, TypeBadge } from "./ui";
 
-function CopyButton({ text, label }: { text: string; label: string }) {
-  const [ok, setOk] = useState(false);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(text); }
-    catch { const ta = document.createElement("textarea"); ta.value = text; document.body.append(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
-    setOk(true); setTimeout(() => setOk(false), 1800);
-  };
+function Meta({ k, children }: { k: string; children: React.ReactNode }) {
+  return <div className="flex items-baseline justify-between gap-4 py-2 text-sm"><dt className="shrink-0 text-subtle">{k}</dt><dd className="min-w-0 truncate text-right text-ink">{children}</dd></div>;
+}
+
+function InstallTabs({ item }: { item: Item }) {
+  const options = useMemo(() => installOptions(item), [item]);
+  const [sel, setSel] = useState(0);
+  useEffect(() => setSel(0), [item.id]);
+  const o = options[Math.min(sel, options.length - 1)];
+  if (!o) return <p className="rounded-md border border-dashed border-line p-3 text-sm text-muted">Pas de commande d'installation connue : consultez le dépôt source.</p>;
+  const reason = item.agentSignals?.[o.agent];
   return (
-    <button onClick={copy} className={`btn btn-primary w-full ${ok ? "!bg-ok !text-bg" : ""}`}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={ok ? "ok" : "idle"} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }} className="inline-flex items-center gap-2">
-          {ok ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}{ok ? "Copié !" : label}
-        </motion.span>
-      </AnimatePresence>
-      <span className="sr-only" role="status">{ok ? "Commande copiée dans le presse-papiers" : ""}</span>
-    </button>
+    <div>
+      {options.length > 1 && (
+        <div role="tablist" aria-label="Installer pour" className="mb-2 flex flex-wrap gap-1">
+          {options.map((x, i) => (
+            <button key={x.agent} role="tab" aria-selected={i === sel} onClick={() => setSel(i)}
+              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${i === sel ? "border-accent bg-accent/10 text-ink" : "border-line text-muted hover:border-line-strong hover:text-ink"}`}>{x.label}</button>
+          ))}
+        </div>
+      )}
+      <pre className="scroll-thin overflow-x-auto rounded-md border border-line bg-bg p-3 font-mono text-xs leading-relaxed" tabIndex={0}><code>{o.commands.join("\n")}</code></pre>
+      <p className="mt-1.5 text-[11px] leading-snug text-subtle">
+        {o.note}{reason && <> Compatibilité {o.label} : {reason}.</>}
+      </p>
+      <div className="mt-2"><CopyButton text={o.commands.join("\n")} label="Copier la commande d'install" /></div>
+    </div>
   );
 }
 
-function Meta({ k, children }: { k: string; children: React.ReactNode }) {
-  return <div className="flex items-baseline justify-between gap-4 py-2 text-sm"><dt className="text-subtle">{k}</dt><dd className="min-w-0 truncate text-right text-ink">{children}</dd></div>;
-}
-
-export function Drawer({ item, lang, onClose }: { item: Item | null; lang: "fr" | "en"; onClose: () => void }) {
+export function Drawer({ item, lang, onClose, similar, onOpen }: {
+  item: Item | null; lang: "fr" | "en"; onClose: () => void; similar: (id: string, n?: number) => Promise<Item[]>; onOpen: (id: string) => void;
+}) {
   const reduce = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
+  const [detail, setDetail] = useState<ItemDetail | null>(null);
+  const [related, setRelated] = useState<Item[]>([]);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  useEffect(() => {
+    setDetail(null); setRelated([]);
+    if (!item) return;
+    let live = true;
+    loadDetail(item.id).then((d) => live && setDetail(d));
+    similar(item.id, 6).then((r) => live && setRelated(r));
+    panelRef.current?.scrollTo({ top: 0 });
+    return () => { live = false; };
+  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!item) return;
@@ -50,7 +76,9 @@ export function Drawer({ item, lang, onClose }: { item: Item | null; lang: "fr" 
     document.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; (opener.current as HTMLElement | null)?.focus?.(); };
-  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [!!item]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const copyLink = async () => { if (!item) return; await copyText(shareUrl(item.id)); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 1800); };
 
   return (
     <AnimatePresence>
@@ -59,16 +87,20 @@ export function Drawer({ item, lang, onClose }: { item: Item | null; lang: "fr" 
           <motion.div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" onClick={onClose}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : 0.2 }} />
           <motion.aside ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="drawer-title"
-            className="scroll-thin absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-xl border border-line bg-surface shadow-pop focus:outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[520px] sm:rounded-none sm:rounded-l-xl"
+            className="scroll-thin absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-xl border border-line bg-surface shadow-pop focus:outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[540px] sm:rounded-none sm:rounded-l-xl"
             initial={reduce ? { opacity: 0 } : { x: "100%" }} animate={reduce ? { opacity: 1 } : { x: 0 }} exit={reduce ? { opacity: 0 } : { x: "100%" }}
             transition={{ type: "spring", stiffness: 380, damping: 38 }}>
-            <div className="sticky top-0 z-10 flex items-start gap-3 border-b border-line bg-surface/95 p-5 backdrop-blur">
+            <div className="sticky top-0 z-10 flex items-start gap-2 border-b border-line bg-surface/95 p-5 backdrop-blur">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2"><TypeBadge type={item.type} /><RiskBadge level={item.risk.level} /></div>
+                <div className="flex flex-wrap items-center gap-2"><TypeBadge type={item.type} /><RiskBadge level={item.risk.level} /><ConfidenceBadge value={item.modConfidence} /></div>
                 <h2 id="drawer-title" className="mt-2 break-words font-mono text-lg font-semibold">{item.name}</h2>
                 <p className="mt-0.5 truncate font-mono text-xs text-subtle">{item.source.repo}</p>
               </div>
-              <button onClick={onClose} className="icon-btn -mr-2 -mt-1" aria-label="Fermer le panneau"><X className="h-5 w-5" /></button>
+              <FavButton id={item.id} name={item.name} />
+              <button onClick={copyLink} className="icon-btn !h-8 !w-8" aria-label="Copier le lien de partage" title={linkCopied ? "Lien copié !" : "Copier le lien de partage"}>
+                <Link2 className={`h-4 w-4 ${linkCopied ? "text-ok" : ""}`} />
+              </button>
+              <button onClick={onClose} className="icon-btn !h-8 !w-8" aria-label="Fermer le panneau"><X className="h-5 w-5" /></button>
             </div>
 
             <div className="space-y-6 p-5">
@@ -77,6 +109,23 @@ export function Drawer({ item, lang, onClose }: { item: Item | null; lang: "fr" 
                 <p className="mt-2 text-xs text-subtle">{TYPE_BLURB[item.type]}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">{item.tags.map((t) => <span key={t} className="chip">{t}</span>)}</div>
               </section>
+
+              {item.modConfidence !== undefined && item.modConfidence < 0.7 && (
+                <p className="rounded-md border border-line bg-surface-2/50 p-3 text-[13px] text-muted">
+                  <strong className="text-ink">Détection incertaine ({Math.round(item.modConfidence * 100)} %).</strong> Il n'existe pas de format standard pour les mods : celui-ci a été repéré par heuristique. Vérifiez le dépôt avant de l'utiliser.
+                </p>
+              )}
+
+              {detail?.preview && (
+                <section aria-labelledby="preview-h">
+                  <h3 id="preview-h" className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Aperçu</h3>
+                  <blockquote className="max-h-56 overflow-y-auto whitespace-pre-line rounded-md border-l-2 border-accent bg-surface-2/50 px-4 py-3 text-[13px] leading-relaxed text-muted scroll-thin" tabIndex={0}>{detail.preview}</blockquote>
+                  {detail.outline && detail.outline.length > 0 && (
+                    <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Sommaire du fichier">{detail.outline.map((h) => <li key={h} className="chip">{h}</li>)}</ul>
+                  )}
+                  <p className="mt-2 text-[11px] text-subtle">Extrait court du fichier source, sous la licence de son auteur. <a className="underline hover:text-ink" href={item.source.url} target="_blank" rel="noreferrer noopener">Lire l'original</a>.</p>
+                </section>
+              )}
 
               {item.type === "hook" && (
                 <section aria-labelledby="hook-warn" className={`rounded-lg border p-4 ${item.risk.level === "high" ? "border-danger/40 bg-danger/10" : "border-warn/30 bg-warn/10"}`}>
@@ -103,26 +152,41 @@ export function Drawer({ item, lang, onClose }: { item: Item | null; lang: "fr" 
                 </section>
               )}
 
-              <section className="space-y-2" aria-label="Installation">
-                {item.install ? (
-                  <>
-                    <pre className="scroll-thin overflow-x-auto rounded-md border border-line bg-bg p-3 font-mono text-xs" tabIndex={0}><code>{item.install}</code></pre>
-                    <CopyButton text={item.install} label="Copier la commande d'install" />
-                  </>
-                ) : <p className="rounded-md border border-dashed border-line p-3 text-sm text-muted">Pas de commande d'installation connue : consultez le dépôt source.</p>}
+              <section className="space-y-3" aria-label="Installation">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle">Installation</h3>
+                <InstallTabs item={item} />
                 <a href={item.source.url} target="_blank" rel="noreferrer noopener" className="btn w-full"><GithubIcon />Voir la source<ExternalLink className="h-3.5 w-3.5 text-subtle" aria-hidden="true" /></a>
               </section>
 
               <dl className="divide-y divide-line rounded-lg border border-line px-4">
-                <Meta k="Étoiles"><Stars n={item.stars} /></Meta>
+                <Meta k="Étoiles"><span className="inline-flex items-center gap-2"><Stars n={item.stars} /><TrendBadge d7={item.trend?.d7} /></span></Meta>
+                {item.trend && item.trend.d30 > 0 && <Meta k="Sur 30 jours">+{item.trend.d30.toLocaleString("fr-FR")} ★</Meta>}
                 <Meta k="Licence">{item.license ?? "Non renseignée"}</Meta>
+                {item.createdAt && <Meta k="Créé le"><span title={item.createdExact ? "Date du premier commit sur ce chemin" : "Approximation : date de création du dépôt"}>{item.createdExact ? "" : "~ "}{fullDate(item.createdAt)}</span></Meta>}
                 <Meta k="Dernier commit"><span title={fullDate(item.lastCommit)}>{timeAgo(item.lastCommit)}</span></Meta>
                 <Meta k="Repéré le">{fullDate(item.firstSeen)}</Meta>
                 <Meta k="Chemin"><span className="font-mono text-xs">{item.source.path}</span></Meta>
                 <Meta k="Origine">{item.source.origin}</Meta>
                 <Meta k="Agents"><span className="inline-flex items-center gap-2"><AgentPills agents={item.agents} max={6} /><span className="hidden text-xs text-muted sm:inline">{item.agents.map(agentLabel).join(", ")}</span></span></Meta>
               </dl>
-              <p className="text-[11px] leading-snug text-subtle">Agent Hub n'indexe que des métadonnées et un résumé ; le contenu appartient à son auteur et reste soumis à sa licence.</p>
+
+              {related.length > 0 && (
+                <section aria-labelledby="sim-h">
+                  <h3 id="sim-h" className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Éléments similaires</h3>
+                  <ul className="space-y-1.5">
+                    {related.map((r) => (
+                      <li key={r.id}>
+                        <button onClick={() => onOpen(r.id)} className="flex w-full items-center gap-3 rounded-md border border-line px-3 py-2 text-left transition-colors hover:border-line-strong hover:bg-surface-2/60">
+                          <TypeBadge type={r.type} />
+                          <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[13px] font-medium">{r.name}</span><span className="block truncate text-xs text-muted">{lang === "fr" ? r.summary : r.summary_en}</span></span>
+                          <Stars n={r.stars} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              <p className="text-[11px] leading-snug text-subtle">Agent Hub n'indexe que des métadonnées, un court extrait et un résumé ; le contenu appartient à son auteur et reste soumis à sa licence.</p>
             </div>
           </motion.aside>
         </div>

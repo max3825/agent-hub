@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CornerDownLeft, Info, Moon, Search, Sun } from "lucide-react";
+import { Activity, CornerDownLeft, Heart, Info, Moon, Search, Sun } from "lucide-react";
 import type { Item } from "../lib/types";
 import type { Engine } from "../search/useSearch";
 import { emptyFilters } from "../lib/types";
@@ -9,10 +9,10 @@ import { Highlight, Kbd, TypeBadge } from "./ui";
 interface Action { id: string; label: string; icon: React.ReactNode; run: () => void }
 interface Props {
   open: boolean; onClose: () => void; engine: Engine; lang: "fr" | "en"; theme: "light" | "dark";
-  onPick: (it: Item) => void; onToggleTheme: () => void; onAbout: () => void;
+  onPick: (it: Item) => void; onToggleTheme: () => void; onAbout: () => void; onFavs: () => void; onStats: () => void;
 }
 
-export default function CommandPalette({ open, onClose, engine, lang, theme, onPick, onToggleTheme, onAbout }: Props) {
+export default function CommandPalette({ open, onClose, engine, lang, theme, onPick, onToggleTheme, onAbout, onFavs, onStats }: Props) {
   const reduce = useReducedMotion();
   const [q, setQ] = useState("");
   const [items, setItems] = useState<Item[]>([]);
@@ -34,6 +34,8 @@ export default function CommandPalette({ open, onClose, engine, lang, theme, onP
 
   const actions: Action[] = q ? [] : [
     { id: "theme", label: theme === "dark" ? "Passer au thème clair" : "Passer au thème sombre", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, run: onToggleTheme },
+    { id: "favs", label: "Ma sélection (favoris)", icon: <Heart className="h-4 w-4" />, run: onFavs },
+    { id: "stats", label: "Santé du crawl", icon: <Activity className="h-4 w-4" />, run: onStats },
     { id: "about", label: "À propos / Comment ça marche", icon: <Info className="h-4 w-4" />, run: onAbout },
   ];
   const total = items.length + actions.length;

@@ -7,7 +7,7 @@
     "prepare-data": "node scripts/prepare-data.mjs",
     "dev": "node scripts/prepare-data.mjs && vite",
     "dev:real": "DATA_SOURCE=real node scripts/prepare-data.mjs && vite",
-    "build": "node scripts/prepare-data.mjs && tsc --noEmit && vite build",
+    "build": "node scripts/prepare-data.mjs && tsc --noEmit && vite build && node scripts/gen-pages.mjs",
     "build:real": "DATA_SOURCE=real npm run build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"

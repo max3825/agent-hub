@@ -43,7 +43,7 @@ cp .env.example .env     # puis export des variables (ou `export GITHUB_TOKEN=�
 
 python -m crawler --limit 200            # analyse ≤ 200 dépôts
 python -m crawler --limit 200 --no-summaries
-pytest                                   # 67 tests, 0 appel réseau
+pytest                                   # tests, 0 appel réseau
 ```
 
 Sorties : `data/items.json` (complet), `data/meta.json` (date + compteurs), `web/public/index/` (shards de recherche + `manifest.json`).
@@ -133,6 +133,24 @@ Vite + React 18 + TypeScript + Tailwind (3.4) + framer-motion + lucide-react. Pa
 - Lighthouse mobile (build de démo) : Performance 98 · Accessibilité 100 · Bonnes pratiques 100 · SEO 100. Testé avec 20 000 entrées synthétiques : premiers résultats en ~0,4 s, index complet en ~2 s, recherche floue ~130 ms, ~18 cartes dans le DOM.
 - Accessibilité : focus visibles, onglets ARIA + flèches, dialogs avec piège de focus et `Esc`, lien d'évitement.
 - Extension du schéma : champ optionnel `hookCommands` (commandes shell d'un hook) affiché dans le panneau de détail.
+
+## Fonctionnalités (v2)
+
+| Fonction | Comment ça marche |
+|---|---|
+| **Aperçu du contenu** | Un court extrait (≤ 600 caractères) + le sommaire du fichier principal, servis à part (`index/detail/<id[:2]>.json`) et chargés à l'ouverture d'une fiche. Jamais le contenu complet ; lien vers l'original. |
+| **Installation par agent** | Onglets par agent compatible. Claude Code : commande de l'index. Autres : copie du dossier source via `npx degit`, vers un dossier **conventionnel à vérifier dans la doc de l'agent**. |
+| **Favoris / sélection** | Stockés dans le navigateur ; page « Ma sélection » : lien de partage, script `.sh` (éléments à risque élevé commentés) et commandes `/plugin` pour Claude Code. |
+| **Page par élément** | `…/i/<id>/` : pages statiques générées au build (`web/scripts/gen-pages.mjs`) avec méta Open Graph et JSON-LD, plus `404.html` qui redirige toute autre URL `/i/<id>/` vers l'app, et `sitemap.xml` (via `SITE_URL`). |
+| **Nouveautés / tendances** | `firstSeen` + historique quotidien des étoiles (`.cache/stars_history.json`) → `trend.d7` / `trend.d30`. Tri « Tendance », filtre « Nouveautés ». Le premier run n'a pas d'historique : les tendances apparaissent dès le 2ᵉ. |
+| **Date de création** | Date du 1er commit sur le chemin (2 requêtes API, budget `max_creation_lookups` par run, cache permanent) ; sinon création du dépôt, affichée avec « ~ ». |
+| **Santé du crawl** | `?page=stats` : dépôts parcourus/écartés (par raison), doublons, sources en échec, durée, qualité des données. |
+| **Mods : confiance** | `crawler/mods.py` note chaque mod (0–1) ; sous `mod_min_confidence` il est écarté, sous 0,7 l'UI affiche « Détection incertaine » (filtre « fiables uniquement »). |
+| **Agents compatibles** | `crawler/agents.py` : signaux de **fichiers** (`.cursor/`, `AGENTS.md`, `GEMINI.md`…) prioritaires sur les simples **mentions** ; la raison s'affiche dans l'onglet d'installation. |
+| **Recherche par sens** | LSA (TF-IDF + SVD, numpy) calculée au crawl, servie en statique (`semantic.json`, ~1 Mo pour 20 000 entrées), mélangée à la recherche floue (70/30). **Ce n'est pas un LLM** : elle capte les co-occurrences du corpus, donc elle s'améliore avec la taille de l'index et reste approximative sur un petit corpus. |
+| **Similaires / collections** | Similaires : proximité sémantique + tags communs. Collections : requêtes prédéfinies dans `data/collections.json` (modifiable sans toucher au code). |
+
+**Budget de temps** : `CRAWL_MAX_MINUTES` / `--max-minutes`. Passé ce délai, les dépôts restants reprennent leur dernière analyse en cache : le site ne rétrécit pas et le run suivant continue.
 
 ## Déploiement
 

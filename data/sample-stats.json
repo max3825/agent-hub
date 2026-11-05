@@ -1,0 +1,63 @@
+{
+ "generatedAt": "2026-11-05T03:00:00Z",
+ "total": 59,
+ "counts": {
+  "skill": 23,
+  "hook": 20,
+  "mod": 16
+ },
+ "risk": {
+  "low": 20,
+  "medium": 5,
+  "high": 2,
+  "n/a": 32
+ },
+ "repos": 600,
+ "analyzed": 212,
+ "from_cache": 341,
+ "rejected": 38,
+ "errors": 9,
+ "stale_cache": 0,
+ "truncated": false,
+ "duplicates_removed": 47,
+ "mods_dropped_low_confidence": 23,
+ "requests": 2840,
+ "duration_s": 1260,
+ "creation_lookups": 120,
+ "exact_created": 41,
+ "rejected_by_reason": {
+  "low_stars": 21,
+  "inactive": 9,
+  "archived": 5,
+  "fork": 3
+ },
+ "adapters": {
+  "github_topics": {
+   "candidates": 1047,
+   "error": null
+  },
+  "marketplaces": {
+   "candidates": 166,
+   "error": null
+  },
+  "awesome_lists": {
+   "candidates": 267,
+   "error": null
+  },
+  "skills_sh": {
+   "candidates": 67,
+   "error": null
+  },
+  "github_code_search": {
+   "candidates": 587,
+   "error": null
+  }
+ },
+ "by_origin": {
+  "github": 35,
+  "skills.sh": 5,
+  "marketplace": 8,
+  "awesome": 11
+ },
+ "demo": true
+}

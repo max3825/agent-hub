@@ -1,0 +1,10 @@
+[
+  { "id": "frontend", "title": "Frontend & design", "desc": "Interfaces, accessibilité, design systems", "query": "design react frontend accessibility tailwind interface" },
+  { "id": "security", "title": "Sécurité", "desc": "Secrets, menaces, garde-fous", "query": "security secrets threat protect" },
+  { "id": "testing", "title": "Tests & qualité", "desc": "TDD, e2e, lint, revue de code", "query": "testing tdd e2e lint review" },
+  { "id": "devops", "title": "DevOps & infra", "desc": "Docker, Kubernetes, Terraform", "query": "docker kubernetes terraform devops infra" },
+  { "id": "data", "title": "Données & SQL", "desc": "Bases de données, Excel, analyse", "query": "sql database postgres excel data analysis" },
+  { "id": "git", "title": "Git & workflow", "desc": "Commits, changelog, worktrees", "query": "git commit changelog release workflow" },
+  { "id": "docs", "title": "Documents", "desc": "PDF, slides, documentation", "query": "pdf slides docs documents writing" },
+  { "id": "monitoring", "title": "Suivi & notifications", "desc": "Coûts, alertes, status line", "query": "notifications cost monitoring statusline context" }
+]

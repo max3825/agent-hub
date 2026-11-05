@@ -1,0 +1,67 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Design tokens (RGB triplets, utilisés par tailwind.config.ts) ---------- */
+:root, :root[data-theme="dark"] {
+  --bg: 12 12 13;        --surface: 19 19 21;   --surface-2: 27 27 30;
+  --line: 40 40 44;      --line-strong: 62 62 68;
+  --ink: 237 237 239;    --muted: 160 160 168;  --subtle: 112 112 120;
+  --skill: 52 211 153;   --hook: 251 191 36;    --mod: 56 189 248;
+  --ok: 74 222 128;      --warn: 251 191 36;    --danger: 248 113 113;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / .03) inset, 0 1px 2px rgb(0 0 0 / .4);
+  --shadow-pop: 0 24px 64px -12px rgb(0 0 0 / .7), 0 0 0 1px rgb(255 255 255 / .06);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: 250 250 249;     --surface: 255 255 255; --surface-2: 245 245 244;
+  --line: 231 229 228;   --line-strong: 214 211 209;
+  --ink: 24 24 27;       --muted: 82 82 91;     --subtle: 113 113 122;
+  --skill: 4 120 87;     --hook: 180 83 9;      --mod: 3 105 161;
+  --ok: 21 128 61;       --warn: 180 83 9;      --danger: 185 28 28;
+  --shadow-card: 0 1px 2px rgb(24 24 27 / .06), 0 0 0 1px rgb(24 24 27 / .02);
+  --shadow-pop: 0 24px 64px -12px rgb(24 24 27 / .25), 0 0 0 1px rgb(24 24 27 / .06);
+  color-scheme: light;
+}
+/* Accent dynamique = couleur du type actif (onglet) */
+html[data-type="skill"] { --accent: var(--skill); }
+html[data-type="hook"]  { --accent: var(--hook); }
+html[data-type="mod"]   { --accent: var(--mod); }
+
+@layer base {
+  html { background: rgb(var(--bg)); scroll-padding-top: 5rem; }
+  body { @apply bg-bg text-ink font-sans antialiased; font-feature-settings: "cv11", "ss01"; }
+  :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: rgb(var(--accent) / .3); }
+  button { @apply cursor-pointer; }
+}
+
+@layer components {
+  .card-surface { @apply bg-surface border border-line rounded-lg shadow-card; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-[11px] font-medium text-muted; }
+  .kbd { @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-line-strong bg-surface-2 px-1 font-mono text-[10px] text-muted; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-2; }
+  .btn-primary { @apply border-transparent bg-ink text-bg hover:bg-ink/85; }
+  .icon-btn { @apply inline-flex h-9 w-9 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-ink; }
+}
+
+mark.hl { background: rgb(var(--accent) / .22); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgb(var(--line) / .55) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--line) / .55) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, #000 20%, transparent 75%);
+}
+.skeleton { position: relative; overflow: hidden; background: rgb(var(--surface-2)); }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--ink) / .06), transparent); animation: shimmer 1.6s infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+  html { scroll-behavior: auto; }
+}
+.scroll-thin { scrollbar-width: thin; scrollbar-color: rgb(var(--line-strong)) transparent; }

@@ -9,6 +9,13 @@
     <link rel="preload" href="/src/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <script>
+      // Lien partagé /i/<id>/ servi par le fallback SPA (serveur de dev, hébergeur sans 404.html) → ouvre la fiche.
+      (function () {
+        var m = location.pathname.match(/\/i\/([0-9a-f]{16})\/?$/);
+        if (m) location.replace(location.pathname.slice(0, m.index + 1) + "?item=" + m[1]);
+      })();
+    </script>
+    <script>
       // Appliquer le thème avant le premier rendu (évite le flash).
       (function () {
         try {

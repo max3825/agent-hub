@@ -40,6 +40,14 @@ class Item(BaseModel):
     risk: Risk = Field(default_factory=Risk)
     # Extension optionnelle (affichée dans le panneau de détail des hooks).
     hookCommands: list[str] | None = None
+    # Champs optionnels ajoutés après la v1 (tous rétro-compatibles) :
+    createdAt: str | None = None            # date de création de l'élément (1er commit sur son chemin, sinon création du dépôt)
+    createdExact: bool | None = None        # True = 1er commit du chemin ; False = approximation (création du dépôt)
+    trend: dict[str, int] | None = None     # {"d7": +N, "d30": +N} : gain d'étoiles
+    preview: str | None = None              # court extrait (≤ 600 car.) — servi à part, jamais le contenu complet
+    outline: list[str] | None = None        # titres de section du fichier principal
+    agentSignals: dict[str, str] | None = None   # agent → raison de la compatibilité déduite
+    modConfidence: float | None = None      # mods uniquement : confiance de la détection (0..1)
 
 
 class RepoMeta(BaseModel):
@@ -52,6 +60,7 @@ class RepoMeta(BaseModel):
     default_branch: str = "main"
     description: str | None = None
     topics: list[str] = Field(default_factory=list)
+    created_at: str | None = None
 
 
 class Candidate(BaseModel):

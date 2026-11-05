@@ -24,7 +24,7 @@ def test_skill_item_uses_frontmatter_description(fx):
     assert it.install == "npx skills add Acme/Tools --skill pdf"
     assert it.source.url == "https://github.com/Acme/Tools/tree/main/skills/pdf"
     assert it.license == "MIT" and it.stars == 420 and it.risk.level == "n/a"
-    assert "Longer instructions" not in it.model_dump_json()           # jamais de contenu complet
+    assert it.preview and len(it.preview) <= 601                        # extrait court seulement
     assert {"pdf", "forms"} <= set(it.tags)
 
 
@@ -82,3 +82,31 @@ def test_content_hash_ignores_folder_name(fx):
     b = Detected(type="skill", name="renamed", path="b", main_file="b/SKILL.md", rule="skill")
     text = "# No frontmatter name\n\nDoes a thing that is useful enough to summarize."
     assert build_item(a, META, text, [], origin="github", now=NOW).contentHash == build_item(b, META, text, [], origin="github", now=NOW).contentHash
+
+
+def test_preview_is_bounded_never_full_content():
+    from crawler.normalize import make_outline, make_preview
+    long_md = "# T\n\n" + "\n\n".join(f"Paragraph number {i} with some useful words in it." for i in range(200)) + "\n\n## Usage\n\n### Deep\n"
+    pv = make_preview(long_md)
+    assert 0 < len(pv) <= 601 and "Paragraph number 199" not in pv
+    assert make_outline(long_md) == ["Usage", "Deep"]
+    assert make_preview("```\ncode only\n```\n") == ""
+
+
+def test_agent_signals_prefer_paths_over_mentions():
+    from crawler.agents import detect_agents
+    sig = detect_agents([".cursor/rules/x.mdc", "AGENTS.md"], ["works with windsurf too"])
+    assert list(sig)[0] == "claude-code" and sig["cursor"].startswith("fichiers") and sig["codex"].startswith("fichiers")
+    assert sig["windsurf"].startswith("mentionné") and "gemini-cli" not in sig
+
+
+def test_mod_confidence_scoring():
+    from crawler.mods import score_mod
+    good = Detected(type="mod", name="x", path="commands", main_file="commands/a.md", rule="slash-command")
+    c1, _ = score_mod(good, "---\ndescription: Review a PR\n---\nDo the review step by step please.")
+    c2, _ = score_mod(good, "x")
+    assert c1 >= 0.8 > 0.5 > c2
+    plug = Detected(type="mod", name="p", path=".claude-plugin", main_file=".claude-plugin/plugin.json", rule="plugin")
+    assert score_mod(plug, '{"name":"p"}')[0] > 0.9 and score_mod(plug, "not json")[0] < 0.5
+    th = Detected(type="mod", name="t", path="themes/a.json", main_file="themes/a.json", rule="theme")
+    assert score_mod(th, '{"colors": {}}')[0] > score_mod(th, '{"x":1}')[0]

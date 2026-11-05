@@ -18,6 +18,8 @@ class GithubCfg(BaseModel):
     max_items_per_repo: int = 80
     max_tree_entries: int = 30000
     max_topic_pages: int = 3
+    max_creation_lookups: int = 120   # recherches « date du 1er commit » par exécution (2 requêtes chacune)
+    max_runtime_minutes: int = 0      # 0 = illimité ; sinon le crawl s'arrête proprement et reprend au prochain run
 
 
 class AwesomeList(BaseModel):
@@ -50,6 +52,7 @@ class DetectionCfg(BaseModel):
     hook_dirs: list[str] = ["**/hooks"]
     hook_script_ext: list[str] = [".sh", ".py", ".js", ".ts"]
     mods: list[ModRule] = []
+    mod_min_confidence: float = 0.5   # en dessous, la détection d'un mod est écartée
 
 
 class SummariesCfg(BaseModel):

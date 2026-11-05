@@ -18,6 +18,8 @@ github:
   max_items_per_repo: 80
   max_tree_entries: 30000      # au-delà, l'arbre est ignoré (dépôt monorepo géant)
   max_topic_pages: 3           # 100 dépôts par page ; l'API plafonne à 1000 résultats / requête
+  max_creation_lookups: 120    # date de création exacte (1er commit du chemin) : budget par exécution, mis en cache
+  max_runtime_minutes: 0       # budget de temps (0 = illimité) ; surchargé par CRAWL_MAX_MINUTES / --max-minutes
 
 # Dépôts de départ (toujours analysés, même sans topic).
 seed_repos:
@@ -66,6 +68,8 @@ detection:
   hook_dirs:                   # un dossier hooks/ avec des scripts, sans hooks.json
     - "**/hooks"
   hook_script_ext: [".sh", ".py", ".js", ".ts", ".mjs", ".cjs"]
+
+  mod_min_confidence: 0.5      # score de confiance minimal (0..1) pour garder un mod — voir crawler/mods.py
 
   # Les mods n'ont PAS de format standard : chaque règle ci-dessous est une heuristique.
   #   glob   : motif de chemin déclenchant la règle

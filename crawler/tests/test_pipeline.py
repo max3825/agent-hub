@@ -15,7 +15,7 @@ FILES = {
     "copy/repo": {"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Fill PDFs.\n---\nbody"},     # même contenu → doublon
 }
 METAS = {
-    "good/repo": RepoMeta(full_name="good/repo", stars=900, pushed_at="2026-11-01T00:00:00Z", license="MIT"),
+    "good/repo": RepoMeta(full_name="good/repo", stars=900, pushed_at="2026-11-01T00:00:00Z", license="MIT", created_at="2024-01-01T00:00:00Z"),
     "copy/repo": RepoMeta(full_name="copy/repo", stars=30, pushed_at="2026-11-01T00:00:00Z"),
     "tiny/repo": RepoMeta(full_name="tiny/repo", stars=2, pushed_at="2026-11-01T00:00:00Z"),
     "old/repo": RepoMeta(full_name="old/repo", stars=500, pushed_at="2020-01-01T00:00:00Z"),
@@ -35,6 +35,9 @@ class FakeGH:
     def raw(self, repo, ref, path, max_bytes=0): return FILES.get(repo, {}).get(path)
     def search_repos(self, q, pages=1): return [METAS[k] for k in METAS] if "topic:claude-code" in q else []
     def search_code(self, q, pages=1): return []
+    def first_commit_date(self, name, path, branch):
+        self.created_calls = getattr(self, 'created_calls', 0) + 1
+        return "2025-03-01T00:00:00Z"
 
 
 def cfg():
@@ -95,3 +98,40 @@ def test_first_seen_is_persisted(tmp_path):
     later = datetime(2026, 12, 1, tzinfo=timezone.utc)
     run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=later)
     assert all(i["firstSeen"].startswith("2026-11-05") for i in json.loads((data / "items.json").read_text()))
+
+
+def test_created_date_exact_cached_and_trend_and_stats(tmp_path):
+    data, index, cache = tmp_path / "data", tmp_path / "index", Cache(tmp_path / "cache")
+    gh = FakeGH()
+    stats = run(cfg(), gh, cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    items = json.loads((data / "items.json").read_text())
+    assert all(i["createdAt"] == "2025-03-01T00:00:00Z" and i["createdExact"] for i in items)
+    assert gh.created_calls == 3 and stats["exact_created"] == 2 and "trend" not in items[0]   # 1er relevé : pas de tendance
+
+    # 2 jours plus tard, +50 étoiles : tendance calculée, aucune nouvelle recherche de date (cache permanent)
+    METAS["good/repo"] = METAS["good/repo"].model_copy(update={"stars": 950})
+    try:
+        gh2 = FakeGH()
+        later = datetime(2026, 11, 7, tzinfo=timezone.utc)
+        run(cfg(), gh2, cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=later)
+        items = json.loads((data / "items.json").read_text())
+        assert all(i["trend"] == {"d7": 50, "d30": 50} for i in items)
+        assert getattr(gh2, "created_calls", 0) == 0
+    finally:
+        METAS["good/repo"] = METAS["good/repo"].model_copy(update={"stars": 900})
+
+    health = json.loads((data / "stats.json").read_text())
+    assert health["rejected_by_reason"] == {"low_stars": 1, "inactive": 1, "archived": 1} and "github_topics" in health["adapters"]
+    manifest = json.loads((index / "manifest.json").read_text())
+    assert manifest["stats"] is True and (index / "stats.json").exists()
+    det = json.loads((index / "detail" / f"{items[0]['id'][:2]}.json").read_text())
+    assert items[0]["id"] in det and "preview" not in json.loads((index / manifest["shards"][0]["file"]).read_text())[0]
+
+
+def test_time_budget_keeps_previous_analysis_instead_of_shrinking(tmp_path):
+    data, index, cache = tmp_path / "data", tmp_path / "index", Cache(tmp_path / "cache")
+    run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    n_before = len(json.loads((data / "items.json").read_text()))
+    stats = run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW, max_minutes=1e-9)
+    assert stats["truncated"] and stats["stale_cache"] >= 1
+    assert len(json.loads((data / "items.json").read_text())) == n_before

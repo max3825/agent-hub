@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from typing import Any, Callable
 
@@ -47,6 +48,7 @@ class GitHubClient:
         self._last: dict[str, float] = {}
         self._intervals = {"search": search_interval, "code": code_search_interval}
         self.requests = 0
+        self.last_headers: dict[str, str] = {}
 
     # ── bas niveau ──────────────────────────────────────────────────────────
     def _throttle(self, kind: str | None) -> None:
@@ -77,6 +79,7 @@ class GitHubClient:
                 return cached["body"]
             if r.status_code == 200:
                 body = r.json()
+                self.last_headers = dict(r.headers)
                 if self.cache and use_etag and r.headers.get("etag"):
                     self.cache.set("http", ck, {"etag": r.headers["etag"], "body": body})
                 return body
@@ -134,6 +137,22 @@ class GitHubClient:
         d = self.get(f"{API}/repos/{full_name}")
         return parse_repo(d) if d else None
 
+    def first_commit_date(self, full_name: str, path: str, branch: str) -> str | None:
+        """Date du plus ancien commit touchant `path` (2 requêtes : on lit le lien `last` de la pagination)."""
+        url = f"{API}/repos/{full_name}/commits"
+        base = {"sha": branch, "path": path, "per_page": 1}
+        d = self.get(url, base, use_etag=False)
+        if not d:
+            return None
+        link = self.last_headers.get("link", "")
+        m = re.search(r'[?&]page=(\d+)[^>]*>;\s*rel="last"', link)
+        if m and m.group(1) != "1":
+            d = self.get(url, {**base, "page": m.group(1)}, use_etag=False)
+            if not d:
+                return None
+        c = d[-1].get("commit", {})
+        return (c.get("committer") or c.get("author") or {}).get("date")
+
     def tree(self, full_name: str, branch: str) -> tuple[list[str], bool]:
         d = self.get(f"{API}/repos/{full_name}/git/trees/{branch}", {"recursive": 1}, use_etag=False)
         if not d:
@@ -169,4 +188,5 @@ def parse_repo(d: dict[str, Any]) -> RepoMeta:
         full_name=d["full_name"], stars=d.get("stargazers_count", 0), archived=bool(d.get("archived")),
         fork=bool(d.get("fork")), pushed_at=d.get("pushed_at") or "", license=None if lic in (None, "NOASSERTION") else lic,
         default_branch=d.get("default_branch") or "main", description=d.get("description"), topics=d.get("topics") or [],
+        created_at=d.get("created_at"),
     )

@@ -26,6 +26,7 @@ class Adapter(ABC):
 
     def __init__(self, ctx: Context):
         self.ctx = ctx
+        self.error: str | None = None   # renseigné si la source a échoué (page de santé du crawl)
         self.log = logging.getLogger(f"crawler.adapters.{self.name}")
 
     @abstractmethod
@@ -37,5 +38,6 @@ class Adapter(ABC):
             self.log.info("%s : %d candidat(s)", self.name, len(found))
             return found
         except Exception as e:  # noqa: BLE001 — échec silencieux voulu (voir cahier des charges)
-            self.log.warning("source %s ignorée (%s: %s)", self.name, type(e).__name__, e)
+            self.error = f"{type(e).__name__}: {e}"
+            self.log.warning("source %s ignorée (%s)", self.name, self.error)
             return []

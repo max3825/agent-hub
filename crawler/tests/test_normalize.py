@@ -75,3 +75,10 @@ def test_markdown_mod_prose_does_not_raise_false_positive():
     assert it.risk.level == "n/a"
     d2 = Detected(type="mod", name="sl", path="statusline.sh", main_file="statusline.sh", rule="statusline")
     assert build_item(d2, META, "echo ok; rm -rf /tmp/x", [], origin="github", now=NOW).risk.level == "medium"   # script : analysé normalement
+
+
+def test_content_hash_ignores_folder_name(fx):
+    a = Detected(type="skill", name="folder-a", path="a", main_file="a/SKILL.md", rule="skill")
+    b = Detected(type="skill", name="renamed", path="b", main_file="b/SKILL.md", rule="skill")
+    text = "# No frontmatter name\n\nDoes a thing that is useful enough to summarize."
+    assert build_item(a, META, text, [], origin="github", now=NOW).contentHash == build_item(b, META, text, [], origin="github", now=NOW).contentHash

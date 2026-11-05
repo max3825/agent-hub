@@ -132,7 +132,7 @@ def build_item(
         source=Source(repo=meta.full_name, url=url, path=d.path, origin=origin),
         stars=meta.stars, license=_norm_license(meta.license), lastCommit=meta.pushed_at or iso(now),
         firstSeen=first_seen or iso(now), agents=agent_list, install=build_install(d, meta.full_name),
-        contentHash=content_hash(d.type, name, main_text), risk=risk, hookCommands=commands,
+        contentHash=content_hash(d.type, main_text), risk=risk, hookCommands=commands,
     )
 
 

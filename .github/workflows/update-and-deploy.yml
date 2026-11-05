@@ -78,6 +78,8 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
+          # Un push sert à valider rapidement : crawl réduit (le cron et le lancement manuel gardent le budget complet).
+          if [ "${{ github.event_name }}" = "push" ]; then ARGS="$ARGS --limit 60"; fi
           if [ "${{ inputs.no_summaries }}" = "true" ]; then ARGS="$ARGS --no-summaries"; fi
           python -m crawler $ARGS
 

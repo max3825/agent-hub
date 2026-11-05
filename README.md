@@ -43,7 +43,7 @@ cp .env.example .env     # puis export des variables (ou `export GITHUB_TOKEN=�
 
 python -m crawler --limit 200            # analyse ≤ 200 dépôts
 python -m crawler --limit 200 --no-summaries
-pytest                                   # 62 tests, 0 appel réseau
+pytest                                   # 67 tests, 0 appel réseau
 ```
 
 Sorties : `data/items.json` (complet), `data/meta.json` (date + compteurs), `web/public/index/` (shards de recherche + `manifest.json`).
@@ -63,7 +63,9 @@ Sorties : `data/items.json` (complet), `data/meta.json` (date + compteurs), `web
    `github_topics` (topics + dépôts de départ) · `marketplaces` (`marketplace.json` → plugins) · `awesome_lists` (liens dans les README) · `skills_sh` (optionnel, défensif) · `github_code_search` (`filename:SKILL.md`, throttlé ~6,5 s/requête).
 2. **Filtre qualité** — étoiles min, non archivé, non fork, activité récente (tout est dans `sources.yaml`).
 3. **Analyse incrémentale** — arbre git du dépôt → détection → lecture des seuls fichiers utiles (via `raw.githubusercontent.com`, hors quota API). Requêtes API en **ETag** (304 gratuits) ; un dépôt dont le `pushed_at` n'a pas changé est servi depuis `.cache/` sans re-parcours. Rate limit : attente via `Retry-After` / `x-ratelimit-reset`, **backoff exponentiel** sur les 5xx, abandon propre si l'attente dépasse 90 s.
-4. **Normalisation** vers le schéma `Item`, **dédoublonnage** (même `contentHash` → on garde l'original non-fork avec le plus d'étoiles).
+4. **Normalisation** vers le schéma `Item`, puis **dédoublonnage en deux passes** (on garde toujours l'original non-fork, puis le plus étoilé) :
+   - *exact* : même type et même `contentHash` (empreinte du **contenu** du fichier principal, indépendante du nom de dossier) ;
+   - *quasi-doublons* : même type, même nom normalisé (`PDF-Skill` ≈ `pdf`) **et** résumés proches (Jaccard ≥ 0,6), ou résumés identiques. Deux outils homonymes de buts différents sont conservés.
 5. **Résumés** — seulement si le `contentHash` a changé, par lots de 10, cache dans `.cache/summaries.json`, plafonnés par `MAX_SUMMARIES_PER_RUN`.
 6. **Sorties** — et protection : si un crawl ne ramène **rien** (réseau coupé…), le `items.json` existant est conservé (code retour 1).
 

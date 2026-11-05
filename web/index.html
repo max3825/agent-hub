@@ -6,6 +6,7 @@
     <title>Agent Hub — skills, hooks et mods pour agents IA de code</title>
     <meta name="description" content="Le méta-annuaire des extensions pour agents IA de code : skills, hooks et mods agrégés depuis GitHub, skills.sh et les marketplaces. Recherche instantanée." />
     <meta name="theme-color" content="#0c0c0d" />
+    <link rel="preload" href="/src/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <script>
       // Appliquer le thème avant le premier rendu (évite le flash).
@@ -19,7 +20,20 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Shell statique : peint dès que le CSS est chargé (sans attendre le JS) ; React le remplace au montage.
+           Mêmes dimensions que le vrai header + hero pour éviter tout décalage. -->
+      <div class="min-h-dvh">
+        <div class="h-16 border-b border-line"></div>
+        <section class="relative overflow-hidden border-b border-line">
+          <div class="relative mx-auto max-w-7xl px-4 py-10 sm:py-14">
+            <h1 class="max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-5xl">Tout ce qui étend vos agents de code, <span class="text-muted">au même endroit.</span></h1>
+            <p class="mt-4 max-w-xl text-pretty text-[15px] text-muted">Un méta-annuaire des skills, hooks et mods pour Claude Code, Codex, Cursor et consorts — agrégés depuis GitHub, skills.sh et les marketplaces, mis à jour toutes les 12 heures.</p>
+            <div class="mt-7 h-10"></div>
+          </div>
+        </section>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

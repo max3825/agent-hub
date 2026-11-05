@@ -69,15 +69,7 @@ export default function App() {
       ) : (
         <>
           <Hero manifest={engine.manifest} />
-          {engine.manifest?.demo && (
-            <div className="border-b border-line bg-surface-2/50">
-              <p className="mx-auto max-w-7xl px-4 py-2 text-xs text-muted">
-                <strong className="text-ink">Données de démonstration</strong> — entrées fictives. Lancez <code className="font-mono">python -m crawler</code> puis <code className="font-mono">npm run dev:real</code> pour voir les vraies données.
-              </p>
-            </div>
-          )}
-
-          <main className="mx-auto max-w-7xl px-4 pb-24 pt-6">
+          <main className="mx-auto min-h-[85vh] max-w-7xl px-4 pb-24 pt-6">
             <Tabs type={ui.type} counts={counts} onChange={changeType} />
 
             <div className="mt-5 flex items-center gap-2">
@@ -106,6 +98,7 @@ export default function App() {
               </aside>
 
               <div id="results-panel" role="tabpanel" aria-labelledby={`tab-${ui.type}`} tabIndex={-1} className="min-w-0 focus:outline-none">
+                <h2 className="sr-only">Résultats : {TYPE_LABEL[ui.type]}</h2>
                 {engine.error ? (
                   <EmptyState title="Impossible de charger l'index" hint={`${engine.error}. Vérifiez votre connexion ou relancez le chargement.`}
                     action={<button className="btn btn-primary" onClick={engine.retry}><AlertCircle className="h-4 w-4" />Réessayer</button>} />

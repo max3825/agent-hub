@@ -67,3 +67,11 @@ def test_helpers():
     assert first_useful_sentence("# T\n\n| a | b |\n\n```\ncode\n```\n") == ""
     assert infer_agents("works with Codex and Cursor") == ["claude-code", "codex", "cursor"]
     assert infer_agents("nothing") == ["claude-code"]
+
+
+def test_markdown_mod_prose_does_not_raise_false_positive():
+    d = Detected(type="mod", name="x-commands", path="commands", main_file="commands/x.md", rule="slash-command")
+    it = build_item(d, META, "---\ndescription: Cleans up\n---\nDelete with rm -rf and never read .env or ~/.ssh", [], origin="github", now=NOW)
+    assert it.risk.level == "n/a"
+    d2 = Detected(type="mod", name="sl", path="statusline.sh", main_file="statusline.sh", rule="statusline")
+    assert build_item(d2, META, "echo ok; rm -rf /tmp/x", [], origin="github", now=NOW).risk.level == "medium"   # script : analysé normalement

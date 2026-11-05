@@ -16,7 +16,6 @@ export const ItemCard = memo(function ItemCard({ item, terms, lang, onOpen, inde
       transition={{ duration: 0.28, delay: Math.min(index, 8) * 0.025, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -2 }}
       className="card-surface group flex h-full w-full flex-col p-4 text-left transition-colors hover:border-line-strong hover:bg-surface-2/60"
-      aria-label={`${item.name} — ${item.type}. Ouvrir le détail`}
     >
       <div className="flex items-start gap-2">
         <TypeBadge type={item.type} />

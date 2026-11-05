@@ -114,7 +114,10 @@ def build_item(
 
     tags = list(dict.fromkeys([*d.tags, *[str(t).lower() for t in (fm.get("tags") or []) if isinstance(t, (str, int))], *meta.topics[:4]]))[:8]
     commands = extract_hook_commands(main_text) if d.type == "hook" and d.main_file.endswith(".json") else None
-    risk: Risk = assess([main_text, *extra_texts], d.type)
+    # Un mod en Markdown (commande slash, sous-agent…) est de la prose, pas du code exécutable :
+    # on lui applique la même sévérité réduite qu'aux skills pour éviter les faux positifs.
+    scan_kind = "skill" if d.type == "mod" and d.main_file.lower().endswith(".md") else d.type
+    risk: Risk = assess([main_text, *extra_texts], scan_kind)
     # La commande d'un hook est déjà dans main_text ; les scripts référencés sont dans extra_texts.
 
     ref = meta.default_branch

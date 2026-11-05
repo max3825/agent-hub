@@ -1,6 +1,7 @@
 """Orchestration : découverte → filtre qualité → analyse (incrémentale) → dédoublonnage → résumés → sorties."""
 from __future__ import annotations
 
+import json
 import logging
 import posixpath
 from datetime import datetime, timedelta, timezone
@@ -128,6 +129,13 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
     log.info("%d dépôt(s) à analyser (budget %d)", len(repos), budget)
 
     first_seen = cache.load_map("first_seen")
+    prev = data_dir / "items.json"  # filet de sécurité si le cache a été purgé : on reprend les firstSeen déjà publiés
+    if prev.exists():
+        try:
+            for old in json.loads(prev.read_text("utf-8")):
+                first_seen.setdefault(old["id"], old["firstSeen"])
+        except (OSError, ValueError, KeyError, TypeError):
+            log.warning("items.json existant illisible : firstSeen non repris")
     all_items: list[Item] = []
     forks: set[str] = set()
     stats = {"repos": len(repos), "analyzed": 0, "from_cache": 0, "rejected": 0, "errors": 0}

@@ -18,8 +18,8 @@ export default {
         ok: c("ok"), warn: c("warn"), danger: c("danger"),
       },
       fontFamily: {
-        sans: ['"Inter Variable"', "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ['"JetBrains Mono Variable"', "ui-monospace", "SFMono-Regular", "monospace"],
+        sans: ['"Inter Variable"', '"Inter Fallback"', "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ['"JetBrains Mono Variable"', '"Mono Fallback"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: { sm: "6px", md: "10px", lg: "14px", xl: "20px" },
       boxShadow: {

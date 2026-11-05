@@ -27,7 +27,7 @@ export function Hero({ manifest }: { manifest: Manifest | null }) {
         <p className="mt-4 max-w-xl text-pretty text-[15px] text-muted">
           Un méta-annuaire des skills, hooks et mods pour Claude Code, Codex, Cursor et consorts — agrégés depuis GitHub, skills.sh et les marketplaces, mis à jour toutes les 12 heures.
         </p>
-        <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+        <div className="mt-7 flex min-h-10 flex-wrap items-center gap-x-6 gap-y-3 text-sm">
           {TYPES.map((t: ItemType) => (
             <div key={t} className="flex items-baseline gap-2">
               <span className={`h-2 w-2 translate-y-[-1px] rounded-full ${TYPE_BG[t]}`} aria-hidden="true" />
@@ -41,6 +41,9 @@ export function Hero({ manifest }: { manifest: Manifest | null }) {
             </span>
           )}
         </div>
+        <p className="mt-4 min-h-5 text-xs text-muted">
+          {manifest?.demo && (<><strong className="text-ink">Données de démonstration</strong> — entrées fictives. Lancez <code className="font-mono">python -m crawler</code> puis <code className="font-mono">npm run dev:real</code> pour voir les vraies données.</>)}
+        </p>
       </div>
     </section>
   );

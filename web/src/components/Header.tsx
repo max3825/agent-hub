@@ -34,7 +34,7 @@ export const Header = forwardRef<HTMLInputElement, Props>(function Header(p, ref
 
         <nav className="flex shrink-0 items-center gap-0.5" aria-label="Actions">
           <button onClick={p.onAbout} className="hidden rounded-md px-2.5 py-2 text-sm text-muted hover:bg-surface-2 hover:text-ink md:block">À propos</button>
-          <button onClick={p.onLang} className="icon-btn font-mono text-[11px] font-semibold" aria-label={`Langue des résumés : ${p.lang === "fr" ? "français" : "anglais"} (changer)`} title="Langue des résumés">{p.lang.toUpperCase()}</button>
+          <button onClick={p.onLang} className="icon-btn font-mono text-[11px] font-semibold" aria-label={`${p.lang.toUpperCase()} — langue des résumés (changer)`} title="Langue des résumés">{p.lang.toUpperCase()}</button>
           <button onClick={p.onTheme} className="icon-btn" aria-label={p.theme === "dark" ? "Passer au thème clair" : "Passer au thème sombre"}>
             {p.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>

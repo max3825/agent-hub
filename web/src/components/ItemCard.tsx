@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import type { Item } from "../lib/types";
 import { timeAgo } from "../lib/format";
+import { t } from "../lib/i18n";
 import { FavButton } from "./FavButton";
 import { AgentPills, ConfidenceBadge, Highlight, RiskBadge, Stars, TrendBadge, TypeBadge } from "./ui";
 
@@ -21,7 +22,7 @@ export const ItemCard = memo(function ItemCard({ item, terms, lang, onOpen, inde
         <div className="flex items-start gap-2 pr-8">
           <TypeBadge type={item.type} />
           <h3 className="min-w-0 flex-1 truncate font-mono text-[13.5px] font-semibold leading-6"><Highlight text={item.name} terms={terms} /></h3>
-          {isNew && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">Nouveau</span>}
+          {isNew && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">{t("Nouveau")}</span>}
         </div>
         <p className="mt-2 line-clamp-2 text-[13.5px] leading-snug text-muted"><Highlight text={summary} terms={terms} /></p>
         <p className="mt-1 truncate font-mono text-[11px] text-subtle">{item.source.repo}</p>

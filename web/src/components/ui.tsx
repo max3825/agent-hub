@@ -1,7 +1,8 @@
 import { memo, useMemo, type ReactNode } from "react";
 import { AlertTriangle, HelpCircle, ShieldAlert, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import type { ItemType, RiskLevel } from "../lib/types";
-import { RISK_META, TYPE_SINGULAR, agentLabel, agentShort, compact, escapeRegExp } from "../lib/format";
+import { riskLabel, riskShort, typeSingular, agentLabel, agentShort, compact, escapeRegExp } from "../lib/format";
+import { locale, t } from "../lib/i18n";
 
 export const TYPE_TEXT: Record<ItemType, string> = { skill: "text-skill", hook: "text-hook", mod: "text-mod" };
 export const TYPE_BG: Record<ItemType, string> = { skill: "bg-skill", hook: "bg-hook", mod: "bg-mod" };
@@ -31,7 +32,7 @@ export function GithubIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 export const TypeBadge = memo(function TypeBadge({ type }: { type: ItemType }) {
-  return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_SOFT[type]}`}>{TYPE_SINGULAR[type]}</span>;
+  return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${TYPE_SOFT[type]}`}>{typeSingular(type)}</span>;
 });
 
 const RISK_STYLE: Record<RiskLevel, string> = {
@@ -45,9 +46,9 @@ export function RiskBadge({ level, compactMode = false }: { level: RiskLevel; co
   const Icon = level === "low" ? ShieldCheck : level === "medium" ? AlertTriangle : ShieldAlert;
   return (
     <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${RISK_STYLE[level]}`}
-      title="Estimation heuristique automatique — ce n'est pas un audit de sécurité.">
+      title={t("Estimation heuristique automatique — ce n'est pas un audit de sécurité.")}>
       <Icon className="h-3 w-3" aria-hidden="true" />
-      {compactMode ? RISK_META[level].short : RISK_META[level].label}
+      {compactMode ? riskShort(level) : riskLabel(level)}
     </span>
   );
 }
@@ -55,7 +56,7 @@ export function RiskBadge({ level, compactMode = false }: { level: RiskLevel; co
 export function AgentPills({ agents, max = 4 }: { agents: string[]; max?: number }) {
   const shown = agents.slice(0, max);
   return (
-    <ul className="flex items-center -space-x-1" aria-label={`Agents compatibles : ${agents.map(agentLabel).join(", ")}`}>
+    <ul className="flex items-center -space-x-1" aria-label={t("Agents compatibles : {list}", { list: agents.map(agentLabel).join(", ") })}>
       {shown.map((a) => (
         <li key={a} title={agentLabel(a)} aria-hidden="true"
           className="flex h-5 min-w-5 items-center justify-center rounded-full border border-bg bg-surface-2 px-1 font-mono text-[9px] font-semibold text-muted ring-1 ring-line">
@@ -69,9 +70,9 @@ export function AgentPills({ agents, max = 4 }: { agents: string[]; max?: number
 
 export function Stars({ n }: { n: number }) {
   return (
-    <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted" title={`${n.toLocaleString("fr-FR")} étoiles GitHub`}>
+    <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted" title={t("{n} étoiles GitHub", { n: n.toLocaleString(locale()) })}>
       <Star className="h-3.5 w-3.5" aria-hidden="true" />{compact(n)}
-      <span className="sr-only"> étoiles</span>
+      <span className="sr-only"> {t("étoiles")}</span>
     </span>
   );
 }
@@ -122,8 +123,8 @@ export function EmptyState({ title, hint, action }: { title: string; hint: strin
 export function TrendBadge({ d7 }: { d7?: number }) {
   if (!d7 || d7 <= 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-ok" title="Étoiles gagnées depuis le relevé d'il y a ~7 jours">
-      <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />+{d7.toLocaleString("fr-FR")}<span className="sr-only"> étoiles cette semaine</span>
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-ok" title={t("Étoiles gagnées depuis le relevé d'il y a ~7 jours")}>
+      <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />+{d7.toLocaleString(locale())}<span className="sr-only"> {t("étoiles cette semaine")}</span>
     </span>
   );
 }
@@ -133,8 +134,8 @@ export function ConfidenceBadge({ value }: { value?: number }) {
   if (value === undefined || value >= 0.7) return null;
   return (
     <span className="inline-flex items-center gap-1 rounded-md border border-line px-1.5 py-0.5 text-[11px] text-subtle"
-      title={`Confiance de la détection : ${Math.round(value * 100)} %. Ce mod a été repéré par heuristique ; vérifiez la source.`}>
-      <HelpCircle className="h-3 w-3" aria-hidden="true" />Détection incertaine
+      title={t("Confiance de la détection : {p} %. Ce mod a été repéré par heuristique ; vérifiez la source.", { p: Math.round(value * 100) })}>
+      <HelpCircle className="h-3 w-3" aria-hidden="true" />{t("Détection incertaine")}
     </span>
   );
 }

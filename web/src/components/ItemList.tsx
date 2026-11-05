@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import type { Item } from "../lib/types";
+import { t } from "../lib/i18n";
 import { ItemCard } from "./ItemCard";
 
 const NEW_MS = 7 * 86400000;
@@ -27,7 +28,7 @@ export function ItemList({ items, terms, lang, onOpen }: { items: Item[]; terms:
 
   const now = Date.now();
   return (
-    <div ref={parentRef} role="list" aria-label="Résultats">
+    <div ref={parentRef} role="list" aria-label={t("Résultats")}>
       <div style={{ height: v.getTotalSize(), position: "relative" }}>
         {v.getVirtualItems().map((row) => (
           <div key={row.key} data-index={row.index} ref={v.measureElement} role="presentation"

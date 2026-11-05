@@ -74,7 +74,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CRAWLER_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # optionnel (vide → résumés de repli)
-          MAX_SUMMARIES_PER_RUN: "300"                           # garde-fou de budget
+          MAX_SUMMARIES_PER_RUN: "800"                           # garde-fou de budget (Haiku : quelques centimes pour 800 résumés)
           # Budget de temps : au-delà, le crawl s'arrête proprement et les dépôts restants reprennent leur
           # dernière analyse (cache) → le site ne rétrécit jamais et le prochain run continue où celui-ci s'est arrêté.
           CRAWL_MAX_MINUTES: ${{ inputs.max_minutes || (github.event_name == 'push' && '10' || '42') }}

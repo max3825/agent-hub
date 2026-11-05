@@ -35,11 +35,11 @@ export interface CrawlStats {
   repos?: number; analyzed?: number; from_cache?: number; rejected?: number; errors?: number; stale_cache?: number; truncated?: boolean;
   duplicates_removed?: number; mods_dropped_low_confidence?: number; requests?: number; duration_s?: number;
   creation_lookups?: number; exact_created?: number; demo?: boolean;
-  rejected_by_reason?: Record<string, number>; by_origin?: Record<string, number>;
+  rejected_by_reason?: Record<string, number>; quality_filtered?: Record<string, number>; by_origin?: Record<string, number>;
   adapters?: Record<string, { candidates: number; error: string | null }>;
 }
 
-export interface Collection { id: string; title: string; desc: string; query: string }
+export interface Collection { id: string; title: string; desc: string; title_en?: string; desc_en?: string; query: string }
 
 export interface Manifest {
   version: number;

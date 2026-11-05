@@ -4,6 +4,7 @@
 // documentation de l'agent : les conventions évoluent vite.
 import type { Item } from "./types";
 import { agentLabel } from "./format";
+import { t } from "./i18n";
 
 export interface InstallOption { agent: string; label: string; commands: string[]; kind: "claude" | "shell"; note?: string }
 
@@ -38,30 +39,30 @@ export function installOptions(item: Item): InstallOption[] {
     if (agent === "claude-code" && item.install) {
       const lines = item.install.split("\n");
       const slash = lines.every((l) => l.startsWith("/"));
-      return { agent, label, commands: lines, kind: slash ? "claude" : "shell", note: slash ? "À saisir dans Claude Code." : undefined };
+      return { agent, label, commands: lines, kind: slash ? "claude" : "shell", note: slash ? t("À saisir dans Claude Code.") : undefined };
     }
     const dir = targetDir(agent, item);
-    if (dir) return { agent, label, commands: [fetchSource(item, dir)], kind: "shell", note: "Chemin conventionnel : vérifiez la documentation de l'agent." };
+    if (dir) return { agent, label, commands: [fetchSource(item, dir)], kind: "shell", note: t("Chemin conventionnel : vérifiez la documentation de l'agent.") };
     return {
       agent, label, commands: [fetchSource(item, ".")], kind: "shell",
       note: item.type === "skill"
-        ? `Copie le dossier source dans le répertoire courant ; placez-le ensuite là où ${label} charge ses skills (voir sa documentation).`
-        : `Ce type d'élément dépend du format de l'agent : récupérez la source et adaptez-la pour ${label}.`,
+        ? t("Copie le dossier source dans le répertoire courant ; placez-le ensuite là où {agent} charge ses skills (voir sa documentation).", { agent: label })
+        : t("Ce type d'élément dépend du format de l'agent : récupérez la source et adaptez-la pour {agent}.", { agent: label }),
     };
   });
 }
 
 /** Plan d'installation d'une sélection : commandes shell (script .sh) et commandes à saisir dans Claude Code. */
 export function buildInstallPlan(items: Item[]): { shell: string; claude: string } {
-  const shell: string[] = ["#!/usr/bin/env bash", "# Généré par Agent Hub — RELISEZ chaque commande avant de l'exécuter.", "set -euo pipefail", ""];
+  const shell: string[] = ["#!/usr/bin/env bash", t("# Généré par Agent Hub — RELISEZ chaque commande avant de l'exécuter."), "set -euo pipefail", ""];
   const claude: string[] = [];
   for (const it of items) {
     const opt = installOptions(it).find((o) => o.agent === "claude-code") ?? installOptions(it)[0];
     if (!opt) continue;
     const risky = it.risk.level === "high";
-    const head = `# ${it.name} (${it.type}) — ${it.source.repo}${it.risk.level !== "n/a" ? ` — risque : ${it.risk.level}` : ""}`;
-    if (opt.kind === "claude") claude.push(head, ...opt.commands.map((c) => (risky ? `# [RISQUE ÉLEVÉ, désactivé] ${c}` : c)), "");
-    else shell.push(head, ...opt.commands.map((c) => (risky ? `# [RISQUE ÉLEVÉ, désactivé] ${c}` : c)), "");
+    const head = `# ${it.name} (${it.type}) — ${it.source.repo}${it.risk.level !== "n/a" ? ` — ${t("risque")} : ${it.risk.level}` : ""}`;
+    if (opt.kind === "claude") claude.push(head, ...opt.commands.map((c) => (risky ? `# ${t("[RISQUE ÉLEVÉ, désactivé]")} ${c}` : c)), "");
+    else shell.push(head, ...opt.commands.map((c) => (risky ? `# ${t("[RISQUE ÉLEVÉ, désactivé]")} ${c}` : c)), "");
   }
   return { shell: shell.join("\n"), claude: claude.join("\n").trim() };
 }

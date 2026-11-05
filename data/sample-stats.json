@@ -59,5 +59,11 @@
   "marketplace": 8,
   "awesome": 11
  },
- "demo": true
+ "demo": true,
+ "quality_filtered": {
+  "placeholder_name": 14,
+  "excluded_path": 31,
+  "placeholder_summary": 6,
+  "no_description": 52
+ }
 }

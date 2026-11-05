@@ -338,6 +338,7 @@ stats = {
   "repos": 600, "analyzed": 212, "from_cache": 341, "rejected": 38, "errors": 9, "stale_cache": 0, "truncated": False,
   "duplicates_removed": 47, "mods_dropped_low_confidence": 23, "requests": 2840, "duration_s": 1260,
   "creation_lookups": 120, "exact_created": 41,
+  "quality_filtered": {"placeholder_name": 14, "excluded_path": 31, "placeholder_summary": 6, "no_description": 52},
   "rejected_by_reason": {"low_stars": 21, "inactive": 9, "archived": 5, "fork": 3},
   "adapters": {"github_topics": {"candidates": 1047, "error": None}, "marketplaces": {"candidates": 166, "error": None},
                "awesome_lists": {"candidates": 267, "error": None}, "skills_sh": {"candidates": 67, "error": None},

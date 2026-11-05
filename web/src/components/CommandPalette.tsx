@@ -4,6 +4,7 @@ import { Activity, CornerDownLeft, Heart, Info, Moon, Search, Sun } from "lucide
 import type { Item } from "../lib/types";
 import type { Engine } from "../search/useSearch";
 import { emptyFilters } from "../lib/types";
+import { t } from "../lib/i18n";
 import { Highlight, Kbd, TypeBadge } from "./ui";
 
 interface Action { id: string; label: string; icon: React.ReactNode; run: () => void }
@@ -33,10 +34,10 @@ export default function CommandPalette({ open, onClose, engine, lang, theme, onP
   }, [q, open, engine.version]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const actions: Action[] = q ? [] : [
-    { id: "theme", label: theme === "dark" ? "Passer au thème clair" : "Passer au thème sombre", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, run: onToggleTheme },
-    { id: "favs", label: "Ma sélection (favoris)", icon: <Heart className="h-4 w-4" />, run: onFavs },
-    { id: "stats", label: "Santé du crawl", icon: <Activity className="h-4 w-4" />, run: onStats },
-    { id: "about", label: "À propos / Comment ça marche", icon: <Info className="h-4 w-4" />, run: onAbout },
+    { id: "theme", label: theme === "dark" ? t("Passer au thème clair") : t("Passer au thème sombre"), icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, run: onToggleTheme },
+    { id: "favs", label: t("Ma sélection (favoris)"), icon: <Heart className="h-4 w-4" />, run: onFavs },
+    { id: "stats", label: t("Santé du crawl"), icon: <Activity className="h-4 w-4" />, run: onStats },
+    { id: "about", label: t("À propos / Comment ça marche"), icon: <Info className="h-4 w-4" />, run: onAbout },
   ];
   const total = items.length + actions.length;
   const activate = (i: number) => {
@@ -56,14 +57,14 @@ export default function CommandPalette({ open, onClose, engine, lang, theme, onP
       {open && (
         <div className="fixed inset-0 z-[60] flex items-start justify-center px-4 pt-[12vh]">
           <motion.div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduce ? 0 : 0.15 }} />
-          <motion.div role="dialog" aria-modal="true" aria-label="Palette de commandes"
+          <motion.div role="dialog" aria-modal="true" aria-label={t("Palette de commandes")}
             className="relative w-full max-w-xl overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop"
             initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: -8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.98 }} transition={{ duration: 0.16 }}>
             <div className="flex items-center gap-3 border-b border-line px-4">
               <Search className="h-4 w-4 text-subtle" aria-hidden="true" />
               <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey}
-                role="combobox" aria-expanded="true" aria-controls="cp-list" aria-activedescendant={total ? `cp-opt-${sel}` : undefined} aria-label="Rechercher"
-                placeholder="Chercher partout : skills, hooks, mods…" autoComplete="off" spellCheck={false}
+                role="combobox" aria-expanded="true" aria-controls="cp-list" aria-activedescendant={total ? `cp-opt-${sel}` : undefined} aria-label={t("Rechercher")}
+                placeholder={t("Chercher partout : skills, hooks, mods…")} autoComplete="off" spellCheck={false}
                 className="h-12 flex-1 bg-transparent text-[15px] placeholder:text-subtle focus:outline-none" />
               <Kbd>Esc</Kbd>
             </div>
@@ -88,11 +89,11 @@ export default function CommandPalette({ open, onClose, engine, lang, theme, onP
                   </li>
                 );
               })}
-              {q && items.length === 0 && <li role="presentation" className="px-3 py-8 text-center text-sm text-muted">Aucun résultat pour « {q} »</li>}
+              {q && items.length === 0 && <li role="presentation" className="px-3 py-8 text-center text-sm text-muted">{t("Aucun résultat pour « {q} »", { q })}</li>}
             </ul>
             <div className="flex items-center gap-3 border-t border-line px-4 py-2 text-[11px] text-subtle">
-              <span className="inline-flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> naviguer</span>
-              <span className="inline-flex items-center gap-1"><Kbd>↵</Kbd> ouvrir</span>
+              <span className="inline-flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> {t("naviguer")}</span>
+              <span className="inline-flex items-center gap-1"><Kbd>↵</Kbd> {t("ouvrir")}</span>
             </div>
           </motion.div>
         </div>

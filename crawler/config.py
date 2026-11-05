@@ -55,6 +55,22 @@ class DetectionCfg(BaseModel):
     mod_min_confidence: float = 0.5   # en dessous, la détection d'un mod est écartée
 
 
+class QualityCfg(BaseModel):
+    enabled: bool = True
+    exclude_paths: list[str] = [
+        "**/examples/**", "**/example/**", "**/templates/**", "**/template/**", "**/samples/**", "**/sample/**",
+        "**/demo/**", "**/docs/**", "**/.github/**", "**/archive/**", "**/deprecated/**", "**/legacy/**",
+    ]
+    exclude_names: list[str] = ["template", "template-skill", "example", "examples", "sample", "demo", "test", "hello-world", "my-skill", "skill-name", "your-skill-name", "new-skill"]
+    exclude_name_patterns: list[str] = ["^(template|example|sample|demo|placeholder)(-|$)", "^(my|your|new)-(skill|hook|plugin|mod)$"]
+    placeholder_summary_patterns: list[str] = [
+        r"replace (this )?with (a )?description", r"lorem ipsum", r"your description (here)?", r"description of (what )?the skill",
+        r"\btodo\b[: ]", r"^(add|write) (a )?description", r"describe (what )?your (skill|hook|plugin)",
+    ]
+    min_summary_len: int = 15
+    undescribed_min_stars: int = 200
+
+
 class SummariesCfg(BaseModel):
     max_per_run: int = 300
     batch_size: int = 10
@@ -69,6 +85,7 @@ class Config(BaseModel):
     skills_sh: SkillsShCfg = Field(default_factory=SkillsShCfg)
     detection: DetectionCfg = Field(default_factory=DetectionCfg)
     summaries: SummariesCfg = Field(default_factory=SummariesCfg)
+    quality: QualityCfg = Field(default_factory=QualityCfg)
 
 
 def load_config(path: Path | str | None = None) -> Config:

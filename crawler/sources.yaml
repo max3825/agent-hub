@@ -89,3 +89,15 @@ detection:
 summaries:
   max_per_run: 300             # surchargé par MAX_SUMMARIES_PER_RUN
   batch_size: 10
+
+# ── Filtre qualité ───────────────────────────────────────────────────────────
+# Écarte modèles, exemples et éléments sans vraie description. Chaque règle est modifiable ;
+# les compteurs par raison apparaissent dans la page « Santé du crawl ».
+quality:
+  enabled: true
+  exclude_paths: ["**/examples/**", "**/example/**", "**/templates/**", "**/template/**", "**/samples/**", "**/sample/**", "**/demo/**", "**/docs/**", "**/.github/**", "**/archive/**", "**/deprecated/**", "**/legacy/**"]
+  exclude_names: [template, template-skill, example, examples, sample, demo, test, hello-world, my-skill, skill-name, your-skill-name, new-skill]
+  exclude_name_patterns: ["^(template|example|sample|demo|placeholder)(-|$)", "^(my|your|new)-(skill|hook|plugin|mod)$"]
+  placeholder_summary_patterns: ["replace (this )?with (a )?description", "lorem ipsum", "your description (here)?", "description of (what )?the skill", "\\btodo\\b[: ]", "^(add|write) (a )?description", "describe (what )?your (skill|hook|plugin)"]
+  min_summary_len: 15            # résumé plus court = considéré comme absent
+  undescribed_min_stars: 200     # un élément sans description n'est gardé que s'il est déjà populaire

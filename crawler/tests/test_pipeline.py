@@ -9,10 +9,10 @@ from crawler.pipeline import passes_quality, run
 
 NOW = datetime(2026, 11, 5, tzinfo=timezone.utc)
 FILES = {
-    "good/repo": {"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Fill PDFs.\n---\nbody",
+    "good/repo": {"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Fills PDF forms from JSON data and validates required fields.\n---\nbody",
                   "plugins/fmt/hooks/hooks.json": '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"rm -rf /tmp/x"}]}]}}',
                   "README.md": "# Good\n\nA nice repository with several extensions inside."},
-    "copy/repo": {"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Fill PDFs.\n---\nbody"},     # même contenu → doublon
+    "copy/repo": {"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Fills PDF forms from JSON data and validates required fields.\n---\nbody"},     # même contenu → doublon
 }
 METAS = {
     "good/repo": RepoMeta(full_name="good/repo", stars=900, pushed_at="2026-11-01T00:00:00Z", license="MIT", created_at="2024-01-01T00:00:00Z"),

@@ -34,13 +34,22 @@
         <div class="h-16 border-b border-line"></div>
         <section class="relative overflow-hidden border-b border-line">
           <div class="relative mx-auto max-w-7xl px-4 py-10 sm:py-14">
-            <h1 class="max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-5xl">Tout ce qui étend vos agents de code, <span class="text-muted">au même endroit.</span></h1>
-            <p class="mt-4 max-w-xl text-pretty text-[15px] text-muted">Un méta-annuaire des skills, hooks et mods pour Claude Code, Codex, Cursor et consorts — agrégés depuis GitHub, skills.sh et les marketplaces, mis à jour toutes les 12 heures.</p>
+            <h1 data-en="Everything that extends your coding agents, <span class=&quot;text-muted&quot;>in one place.</span>" class="max-w-2xl text-balance text-3xl font-semibold tracking-tight sm:text-5xl">Tout ce qui étend vos agents de code, <span class="text-muted">au même endroit.</span></h1>
+            <p data-en="A meta-directory of skills, hooks and mods for Claude Code, Codex, Cursor and friends — aggregated from GitHub, skills.sh and marketplaces, updated every 12 hours." class="mt-4 max-w-xl text-pretty text-[15px] text-muted">Un méta-annuaire des skills, hooks et mods pour Claude Code, Codex, Cursor et consorts — agrégés depuis GitHub, skills.sh et les marketplaces, mis à jour toutes les 12 heures.</p>
             <div class="mt-7 h-10"></div>
           </div>
         </section>
       </div>
     </div>
+    <script>
+      // Squelette statique en anglais si la langue (choisie ou du navigateur) est l'anglais : pas de flash français.
+      (function () {
+        var l; try { l = localStorage.getItem("ah-lang"); } catch (e) {}
+        if (l !== "fr" && l !== "en") l = (navigator.language || "").toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+        document.documentElement.lang = l;
+        if (l === "en") document.querySelectorAll("[data-en]").forEach(function (el) { el.innerHTML = el.getAttribute("data-en"); });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

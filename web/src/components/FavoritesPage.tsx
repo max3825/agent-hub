@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Download, Heart, Link2, Trash2 } from "lucide-react";
 import type { Item } from "../lib/types";
 import { useFavorites } from "../lib/favorites";
+import { t } from "../lib/i18n";
 import { buildInstallPlan } from "../lib/install";
 import { CopyButton, copyText } from "./CopyButton";
 import { FavButton } from "./FavButton";
@@ -31,21 +32,21 @@ export default function FavoritesPage({ items, sharedIds, ready, lang, onOpen, o
 
   return (
     <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="mx-auto max-w-4xl px-4 py-10">
-      <button onClick={onBack} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"><ArrowLeft className="h-4 w-4" />Retour à l'annuaire</button>
-      <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight"><Heart className="h-7 w-7 text-danger" fill="currentColor" aria-hidden="true" />{shared ? "Sélection partagée" : "Ma sélection"}</h1>
+      <button onClick={onBack} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"><ArrowLeft className="h-4 w-4" />{t("Retour à l'annuaire")}</button>
+      <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight"><Heart className="h-7 w-7 text-danger" fill="currentColor" aria-hidden="true" />{shared ? t("Sélection partagée") : t("Ma sélection")}</h1>
       <p className="mt-2 text-[15px] text-muted">
-        {shared ? "Une sélection envoyée par lien. " : "Vos favoris sont stockés dans ce navigateur. "}
-        Exportez-les en un script d'installation, ou partagez-les par lien.
+        {shared ? t("Une sélection envoyée par lien.") : t("Vos favoris sont stockés dans ce navigateur.")}{" "}
+        {t("Exportez-les en un script d'installation, ou partagez-les par lien.")}
       </p>
 
-      {!ready ? <p className="mt-10 text-sm text-muted">Chargement…</p> : list.length === 0 ? (
-        <EmptyState title="Aucun favori pour l'instant" hint="Cliquez sur le cœur d'une carte ou d'une fiche pour la garder ici." />
+      {!ready ? <p className="mt-10 text-sm text-muted">{t("Chargement…")}</p> : list.length === 0 ? (
+        <EmptyState title={t("Aucun favori pour l'instant")} hint={t("Cliquez sur le cœur d'une carte ou d'une fiche pour la garder ici.")} />
       ) : (
         <>
           <div className="mt-6 flex flex-wrap gap-2">
-            <button onClick={share} className="btn"><Link2 className="h-4 w-4" />{linkOk ? "Lien copié !" : "Copier le lien de partage"}</button>
-            {shared && <button onClick={() => fav.addMany(ids)} className="btn btn-primary"><Heart className="h-4 w-4" />Ajouter à mes favoris</button>}
-            {!shared && <button onClick={() => { if (confirm("Vider toute la sélection ?")) fav.clear(); }} className="btn"><Trash2 className="h-4 w-4" />Vider</button>}
+            <button onClick={share} className="btn"><Link2 className="h-4 w-4" />{linkOk ? t("Lien copié !") : t("Copier le lien de partage")}</button>
+            {shared && <button onClick={() => fav.addMany(ids)} className="btn btn-primary"><Heart className="h-4 w-4" />{t("Ajouter à mes favoris")}</button>}
+            {!shared && <button onClick={() => { if (confirm(t("Vider toute la sélection ?"))) fav.clear(); }} className="btn"><Trash2 className="h-4 w-4" />{t("Vider")}</button>}
           </div>
 
           <ul className="mt-6 space-y-2">
@@ -62,18 +63,18 @@ export default function FavoritesPage({ items, sharedIds, ready, lang, onOpen, o
           </ul>
 
           <section className="mt-10" aria-labelledby="plan-h">
-            <h2 id="plan-h" className="text-lg font-semibold">Script d'installation</h2>
-            <p className="mt-1 text-[13px] text-muted">Relisez chaque commande avant de l'exécuter.{hasRisky && <strong className="text-danger"> Les éléments à risque élevé sont désactivés (commentés) dans le script.</strong>}</p>
+            <h2 id="plan-h" className="text-lg font-semibold">{t("Script d'installation")}</h2>
+            <p className="mt-1 text-[13px] text-muted">{t("Relisez chaque commande avant de l'exécuter.")}{hasRisky && <strong className="text-danger"> {t("Les éléments à risque élevé sont désactivés (commentés) dans le script.")}</strong>}</p>
             <pre className="scroll-thin mt-3 max-h-72 overflow-auto rounded-md border border-line bg-bg p-3 font-mono text-xs leading-relaxed" tabIndex={0}><code>{plan.shell}</code></pre>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <CopyButton text={plan.shell} label="Copier le script shell" />
-              <button onClick={download} className="btn"><Download className="h-4 w-4" />Télécharger le .sh</button>
+              <CopyButton text={plan.shell} label={t("Copier le script shell")} />
+              <button onClick={download} className="btn"><Download className="h-4 w-4" />{t("Télécharger le .sh")}</button>
             </div>
             {plan.claude && (
               <div className="mt-6">
-                <h3 className="text-sm font-semibold">À saisir dans Claude Code</h3>
+                <h3 className="text-sm font-semibold">{t("À saisir dans Claude Code")}</h3>
                 <pre className="scroll-thin mt-2 max-h-52 overflow-auto rounded-md border border-line bg-bg p-3 font-mono text-xs leading-relaxed" tabIndex={0}><code>{plan.claude}</code></pre>
-                <div className="mt-2"><CopyButton text={plan.claude} label="Copier les commandes /plugin" primary={false} /></div>
+                <div className="mt-2"><CopyButton text={plan.claude} label={t("Copier les commandes /plugin")} primary={false} /></div>
               </div>
             )}
           </section>

@@ -19,6 +19,7 @@ from .dedupe import dedupe
 from .detect import detect
 from .github import GitHubClient, RateLimited
 from .models import Candidate, Detected, Item, RepoMeta, stable_id
+from .quality import filter_items
 from .mods import score_mod
 from .normalize import build_item
 from .trend import compute_trend, update_history
@@ -254,6 +255,8 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
             log.info("progression : %d/%d dépôts (%.0f s)", n, len(repos), time.monotonic() - t0)
 
     cache.save_map("first_seen", first_seen)
+    all_items, quality_rejected = filter_items(all_items, cfg.quality)   # nettoie aussi les éléments repris du cache
+    stats["quality_filtered"] = dict(quality_rejected)
     items = dedupe(all_items, forks)
     stats["duplicates_removed"] = len(all_items) - len(items)
 

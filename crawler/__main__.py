@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
         log.warning("GITHUB_TOKEN absent : limite de 60 requêtes/h, recherche de code désactivée. Définissez-le pour un vrai crawl.")
     stats = run(cfg, gh, cache, limit=a.limit, data_dir=Path(a.data_dir), index_dir=Path(a.index_dir), summaries=not a.no_summaries, max_minutes=a.max_minutes)
     log.info("terminé : %s", json.dumps(stats, ensure_ascii=False, default=str))
-    return 1 if stats.get("kept_previous") else 0
+    return 1 if stats.get("empty") else 0
 
 
 if __name__ == "__main__":

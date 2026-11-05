@@ -89,7 +89,7 @@ def test_limit_caps_repos_and_empty_run_keeps_previous_output(tmp_path):
         def search_repos(self, q, pages=1): return []
     before = (data / "items.json").read_text()
     stats = run(cfg(), Down(), Cache(tmp_path / "c2"), limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
-    assert stats.get("kept_previous") and (data / "items.json").read_text() == before
+    assert stats.get("empty") and stats.get("kept_previous") and (data / "items.json").read_text() == before
 
 
 def test_first_seen_is_persisted(tmp_path):
@@ -135,3 +135,49 @@ def test_time_budget_keeps_previous_analysis_instead_of_shrinking(tmp_path):
     stats = run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW, max_minutes=1e-9)
     assert stats["truncated"] and stats["stale_cache"] >= 1
     assert len(json.loads((data / "items.json").read_text())) == n_before
+
+
+def _warm(tmp_path):
+    data, index, cache = tmp_path / "data", tmp_path / "index", Cache(tmp_path / "cache")
+    run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    return data, index, cache
+
+
+def test_rate_limit_falls_back_to_cache_instead_of_dropping_repos(tmp_path):
+    from crawler.github import RateLimited
+    data, index, cache = _warm(tmp_path)
+    n_before = len(json.loads((data / "items.json").read_text()))
+
+    class Limited(FakeGH):
+        def repo(self, name): raise RateLimited("attente de 3000s")
+
+    stats = run(cfg(), Limited(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    assert stats["rate_limited"] and stats["stale_cache"] >= 1
+    assert len(json.loads((data / "items.json").read_text())) == n_before          # rien n'a disparu
+
+
+def test_old_schema_cache_is_reused_as_fallback_but_reanalyzed_when_possible(tmp_path):
+    import crawler.pipeline as pl
+    data, index, cache = _warm(tmp_path)
+    # on « vieillit » le cache d'un dépôt : ancien schéma
+    entry = cache.get("repo", "good/repo")
+    cache.set("repo", "good/repo", {**entry, "schema": 1})
+    # budget de temps épuisé : l'ancien cache sert de repli (le site ne rétrécit pas)
+    stats = run(cfg(), FakeGH(), cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW, max_minutes=1e-9)
+    assert stats["truncated"] and any(i["source"]["repo"] == "good/repo" for i in json.loads((data / "items.json").read_text()))
+    # avec du temps : le dépôt est ré-analysé (schéma courant)
+    gh = FakeGH()
+    run(cfg(), gh, cache, limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    assert gh.tree_calls >= 1 and cache.get("repo", "good/repo")["schema"] == pl.SCHEMA_VERSION
+
+
+def test_empty_crawl_writes_nothing_and_signals_failure(tmp_path):
+    from crawler.__main__ import main  # noqa: F401  (le code retour 1 repose sur stats["empty"])
+
+    class Down(FakeGH):
+        def repo(self, name): return None
+        def search_repos(self, q, pages=1): return []
+
+    data, index = tmp_path / "data", tmp_path / "index"
+    stats = run(cfg(), Down(), Cache(tmp_path / "c"), limit=None, data_dir=data, index_dir=index, summaries=False, now=NOW)
+    assert stats["empty"] and not (data / "items.json").exists() and not index.exists()

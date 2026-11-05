@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Agent Hub — mise à jour automatique + déploiement GitHub Pages
 #
-#   1. crawle les sources (crawler/sources.yaml) → data/items.json + index de recherche
+#   1. crawle les sources (budget de temps : le site ne rétrécit jamais, voir CRAWL_MAX_MINUTES) (crawler/sources.yaml) → data/items.json + index de recherche
 #   2. construit le site Vite avec les VRAIES données
 #   3. déploie sur GitHub Pages
 #
@@ -21,8 +21,8 @@ on:
     - cron: "0 */12 * * *"          # toutes les 12 heures (UTC)
   workflow_dispatch:
     inputs:
-      limit:
-        description: "Nombre max de dépôts à analyser (vide = valeur de sources.yaml)"
+      max_minutes:
+        description: "Budget de temps du crawl en minutes (vide = 42 ; 10 pour un push). Passé ce délai, les dépôts restants reprennent leur dernière analyse (cache) : le site ne rétrécit pas."
         required: false
         default: ""
       no_summaries:
@@ -77,10 +77,9 @@ jobs:
           MAX_SUMMARIES_PER_RUN: "300"                           # garde-fou de budget
           # Budget de temps : au-delà, le crawl s'arrête proprement et les dépôts restants reprennent leur
           # dernière analyse (cache) → le site ne rétrécit jamais et le prochain run continue où celui-ci s'est arrêté.
-          CRAWL_MAX_MINUTES: "42"
+          CRAWL_MAX_MINUTES: ${{ inputs.max_minutes || (github.event_name == 'push' && '10' || '42') }}
         run: |
           ARGS=""
-          if [ -n "${{ inputs.limit }}" ]; then ARGS="$ARGS --limit ${{ inputs.limit }}"; fi
           if [ "${{ inputs.no_summaries }}" = "true" ]; then ARGS="$ARGS --no-summaries"; fi
           python -m crawler $ARGS
 
@@ -94,9 +93,10 @@ jobs:
         working-directory: web
         env:
           DATA_SOURCE: real
-          # URL publique : liens canoniques, sitemap.xml et aperçus Open Graph des pages /i/<id>/
-          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         run: |
+          # URL publique (liens canoniques, sitemap.xml, aperçus Open Graph des pages /i/<id>/), construite depuis
+          # des variables toujours présentes — y compris sur les runs `schedule`, dont le payload n'a pas de `repository`.
+          export SITE_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
           npm ci
           npm run build
 

@@ -36,7 +36,9 @@ export default function App() {
   const engine = useSearchEngine(ui.type);
   const res = useQuery(engine, ui.q, ui.type, ui.filters, ui.sort, ui.semantic);
   const favs = useFavorites();
-  const [collections, setCollections] = useState<Collection[]>([]);
+  // Copie à chaque arrivée de shard : la page Favoris se recalcule quand l'index se complète (liens partagés vers hooks/mods).
+  const allItems = useMemo(() => [...engine.itemsRef.current], [engine.version]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [collections, setCollections] = useState<Collection[] | null>(null);
   useEffect(() => { loadCollections().then(setCollections); }, []);
   const counts = engine.manifest?.counts ?? res.counts;
 
@@ -82,12 +84,12 @@ export default function App() {
       ) : ui.page === "stats" ? (
         <Suspense fallback={null}><StatsPage onBack={goHome} /></Suspense>
       ) : ui.page === "favs" ? (
-        <Suspense fallback={null}><FavoritesPage items={engine.itemsRef.current} sharedIds={ui.ids} ready={engine.done || engine.loaded > 0} lang={lang} onOpen={openItem} onBack={goHome} /></Suspense>
+        <Suspense fallback={null}><FavoritesPage items={allItems} sharedIds={ui.ids} ready={engine.done} lang={lang} onOpen={openItem} onBack={goHome} /></Suspense>
       ) : (
         <>
           <Hero manifest={engine.manifest} />
           <main className="mx-auto min-h-[85vh] max-w-7xl px-4 pb-24 pt-6">
-            {!ui.q || collections.some((c) => c.query.toLowerCase() === ui.q.trim().toLowerCase()) ? <CollectionsRow items={collections} active={ui.q} onPick={pickCollection} /> : null}
+            {!ui.q || (collections ?? []).some((c) => c.query.toLowerCase() === ui.q.trim().toLowerCase()) ? <CollectionsRow items={collections} active={ui.q} onPick={pickCollection} /> : null}
             <Tabs type={ui.type} counts={counts} onChange={changeType} />
 
             <div className="mt-5 flex items-center gap-2">

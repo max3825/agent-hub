@@ -147,7 +147,7 @@ Vite + React 18 + TypeScript + Tailwind (3.4) + framer-motion + lucide-react. Pa
 | **Santé du crawl** | `?page=stats` : dépôts parcourus/écartés (par raison), doublons, sources en échec, durée, qualité des données. |
 | **Mods : confiance** | `crawler/mods.py` note chaque mod (0–1) ; sous `mod_min_confidence` il est écarté, sous 0,7 l'UI affiche « Détection incertaine » (filtre « fiables uniquement »). |
 | **Agents compatibles** | `crawler/agents.py` : signaux de **fichiers** (`.cursor/`, `AGENTS.md`, `GEMINI.md`…) prioritaires sur les simples **mentions** ; la raison s'affiche dans l'onglet d'installation. |
-| **Recherche par sens** | LSA (TF-IDF + SVD, numpy) calculée au crawl, servie en statique (`semantic.json`, ~1 Mo pour 20 000 entrées), mélangée à la recherche floue (70/30). **Ce n'est pas un LLM** : elle capte les co-occurrences du corpus, donc elle s'améliore avec la taille de l'index et reste approximative sur un petit corpus. |
+| **Recherche par sens** | LSA (TF-IDF + SVD, numpy) calculée au crawl, servie en statique (`semantic.json`, estimation : ~2 Mo non compressé pour 20 000 entrées, chargé en différé après l'index), mélangée à la recherche floue (70/30). **Ce n'est pas un LLM** : elle capte les co-occurrences du corpus, donc elle s'améliore avec la taille de l'index et reste approximative sur un petit corpus. |
 | **Similaires / collections** | Similaires : proximité sémantique + tags communs. Collections : requêtes prédéfinies dans `data/collections.json` (modifiable sans toucher au code). |
 
 **Budget de temps** : `CRAWL_MAX_MINUTES` / `--max-minutes`. Passé ce délai, les dépôts restants reprennent leur dernière analyse en cache : le site ne rétrécit pas et le run suivant continue.

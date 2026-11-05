@@ -7,10 +7,16 @@ import { agentLabel } from "./format";
 
 export interface InstallOption { agent: string; label: string; commands: string[]; kind: "claude" | "shell"; note?: string }
 
-const TARGETS: Record<string, Partial<Record<Item["type"], string>>> = {
-  "claude-code": { skill: "~/.claude/skills", mod: "~/.claude/commands" },
-  codex: { skill: "~/.codex/skills" },
-};
+// Dossier cible conventionnel selon l'agent et la NATURE de l'élément (tag de la règle de détection).
+// Tout ce qui n'est pas listé renvoie à « adapter depuis la source » plutôt que d'inventer un chemin.
+function targetDir(agent: string, item: Item): string | undefined {
+  if (item.type === "skill") return { "claude-code": "~/.claude/skills", codex: "~/.codex/skills" }[agent];
+  if (agent !== "claude-code" || item.type !== "mod") return undefined;
+  if (item.tags.includes("slash-command")) return "~/.claude/commands";
+  if (item.tags.includes("subagents")) return "~/.claude/agents";
+  if (item.tags.includes("output-style")) return "~/.claude/output-styles";
+  return undefined;
+}
 
 function branchOf(url: string): string | null {
   const m = url.match(/\/(?:tree|blob)\/([^/]+)\//);
@@ -34,7 +40,7 @@ export function installOptions(item: Item): InstallOption[] {
       const slash = lines.every((l) => l.startsWith("/"));
       return { agent, label, commands: lines, kind: slash ? "claude" : "shell", note: slash ? "À saisir dans Claude Code." : undefined };
     }
-    const dir = TARGETS[agent]?.[item.type];
+    const dir = targetDir(agent, item);
     if (dir) return { agent, label, commands: [fetchSource(item, dir)], kind: "shell", note: "Chemin conventionnel : vérifiez la documentation de l'agent." };
     return {
       agent, label, commands: [fetchSource(item, ".")], kind: "shell",

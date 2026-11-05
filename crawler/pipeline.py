@@ -189,20 +189,31 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
     now_iso = now.isoformat().replace("+00:00", "Z")
     cl_budget = int(cfg.github.max_creation_lookups)
 
-    for n, cand in enumerate(repos):
+    cache_only = False  # budget de temps dépassé OU rate limit : plus aucun appel API, on reprend le cache existant
+
+    def from_stale(cand: Candidate, cached: dict | None) -> bool:
+        """Reprend la dernière analyse connue (TOUTE version de schéma : les champs ajoutés sont optionnels)."""
+        if not cached:
+            return False
         try:
-            cached = cache.get("repo", cand.repo.lower())
-            if deadline and time.monotonic() > deadline:
-                # Budget de temps dépassé : on ne perd rien, les dépôts restants reprennent leur dernière analyse connue.
-                stats["truncated"] = True
-                if cached and cached.get("schema") == SCHEMA_VERSION:
-                    items = [Item.model_validate(i) for i in cached["items"]]
-                    stats["stale_cache"] += 1
-                    for it in items:
-                        it.source.origin = cand.origin
-                        it.firstSeen = first_seen.setdefault(it.id, it.firstSeen or now_iso)
-                    all_items += items
-                continue
+            items = [Item.model_validate(i) for i in cached["items"]]
+        except Exception:  # noqa: BLE001
+            return False
+        for it in items:
+            it.source.origin = cand.origin
+            it.firstSeen = first_seen.setdefault(it.id, it.firstSeen or now_iso)
+        all_items.extend(items)
+        stats["stale_cache"] += 1
+        return True
+
+    for n, cand in enumerate(repos):
+        cached = cache.get("repo", cand.repo.lower())
+        if not cache_only and deadline and time.monotonic() > deadline:
+            cache_only, stats["truncated"] = True, True
+        if cache_only:  # le site ne rétrécit pas : dernière analyse connue, sinon le dépôt attend le prochain run
+            from_stale(cand, cached)
+            continue
+        try:
             meta = gh.repo(cand.repo)
             if not meta:
                 stats["errors"] += 1
@@ -214,7 +225,8 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
                 stats["rejected"] += 1
                 rejected[reason_key(why)] += 1
                 continue
-            if cached and cached.get("pushed_at") == meta.pushed_at and cached.get("schema") == SCHEMA_VERSION:
+            fresh = bool(cached and cached.get("pushed_at") == meta.pushed_at and cached.get("schema") == SCHEMA_VERSION)
+            if fresh:
                 items = [Item.model_validate(i) for i in cached["items"]]
                 for it in items:  # on rafraîchit seulement les métadonnées volatiles
                     it.stars, it.lastCommit = meta.stars, meta.pushed_at or it.lastCommit
@@ -223,18 +235,21 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
                 items = analyze_repo(meta, cand.origin, cfg, gh, first_seen, now, state)
                 stats["analyzed"] += 1
             apply_created(items, meta, gh, cache, state, cl_budget)
-            if not (cached and cached.get("pushed_at") == meta.pushed_at and cached.get("schema") == SCHEMA_VERSION) or state.get("lookups"):
+            if not fresh or state.get("lookups"):
                 cache.set("repo", meta.full_name.lower(), {"pushed_at": meta.pushed_at, "schema": SCHEMA_VERSION, "items": [i.model_dump(mode="json") for i in items]})
             for it in items:
                 it.source.origin = cand.origin
                 it.firstSeen = first_seen.setdefault(it.id, it.firstSeen if it.firstSeen else now_iso)
             all_items += items
         except RateLimited as e:
-            log.warning("rate limit : arrêt anticipé du crawl (%s)", e)
-            break
+            # Rate limit : on bascule en mode « cache seulement » pour ce dépôt et tous les suivants (rien n'est supprimé).
+            log.warning("rate limit : bascule en mode cache seul (%s)", e)
+            cache_only, stats["rate_limited"] = True, True
+            from_stale(cand, cached)
         except Exception as e:  # noqa: BLE001 — un dépôt défaillant ne doit pas bloquer les autres
             log.warning("%s ignoré (%s: %s)", cand.repo, type(e).__name__, e)
             stats["errors"] += 1
+            from_stale(cand, cached)
         if n and n % 50 == 0:
             log.info("progression : %d/%d dépôts (%.0f s)", n, len(repos), time.monotonic() - t0)
 
@@ -255,9 +270,11 @@ def run(cfg: Config, gh: GitHubClient, cache: Cache, *, limit: int | None, data_
 
     items.sort(key=lambda i: (-i.stars, i.name))
     items_path = data_dir / "items.json"
-    if not items and items_path.exists() and items_path.stat().st_size > 10:
-        log.error("aucun élément collecté (réseau ? rate limit ?) : data/items.json existant conservé")
-        stats["kept_previous"] = True
+    if not items:
+        # Rien collecté (réseau ? rate limit ?) : on n'écrit RIEN — en CI, l'échec (code 1) empêche le déploiement d'un site vide.
+        stats["empty"] = True
+        stats["kept_previous"] = items_path.exists() and items_path.stat().st_size > 10
+        log.error("aucun élément collecté : sorties inchangées")
         return stats
     stats.update({
         "total": len(items), "requests": gh.requests, "duration_s": round(time.monotonic() - t0),

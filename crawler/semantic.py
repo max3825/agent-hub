@@ -1,7 +1,7 @@
 """Recherche sémantique « légère » : LSA (TF-IDF + décomposition en valeurs singulières), 100 % statique.
 
 Pourquoi pas de vrais embeddings ? Pas de modèle à télécharger côté navigateur, pas d'API payante, pas de
-dépendance lourde : tout tient dans un `semantic.json` d'environ 1 Mo pour 20 000 entrées. Le modèle capte
+dépendance lourde : tout tient dans un `semantic.json` (estimation : ~2 Mo non compressé pour 20 000 entrées, dont ~1,3 Mo de vecteurs). Le modèle capte
 les co-occurrences du corpus (« relire du SQL » ≈ « optimiser des requêtes »), pas le sens général d'un LLM.
 Le corpus mêle français et anglais (summary + summary_en), ce qui relie les deux langues.
 

@@ -1,6 +1,9 @@
 import type { Collection } from "../lib/types";
 
-export function CollectionsRow({ items, active, onPick }: { items: Collection[]; active: string; onPick: (c: Collection) => void }) {
+export function CollectionsRow({ items, active, onPick }: { items: Collection[] | null; active: string; onPick: (c: Collection) => void }) {
+  if (items === null) { // chargement : on réserve exactement la hauteur finale (pas de décalage de mise en page)
+    return <div className="mb-6" aria-hidden="true"><div className="mb-2 h-4" /><div className="flex gap-2 pb-2">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skeleton h-[62px] w-48 shrink-0 rounded-lg" />)}</div></div>;
+  }
   if (!items.length) return null;
   return (
     <section aria-label="Collections thématiques" className="mb-6">

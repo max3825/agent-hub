@@ -1,0 +1,87 @@
+# ───────────────────────────────────────────────────────────────────────────
+# Configuration du crawler Agent Hub.
+# Pour proposer une source : ajoutez-la ci-dessous (voir README « Ajouter une source »).
+# Les adapters échouent silencieusement (log) : une source cassée ne bloque jamais le crawl.
+# ───────────────────────────────────────────────────────────────────────────
+
+github:
+  topics:                      # recherche de dépôts par topic GitHub
+    - claude-code
+    - agent-skills
+    - claude-skills
+    - claude-code-plugins
+    - claude-code-hooks
+  min_stars: 20                # seuil de qualité
+  max_inactive_days: 540       # ignore les dépôts sans push depuis N jours (0 = pas de filtre)
+  skip_forks: true             # les forks sont ignorés (le dédoublonnage par contentHash garde l'original)
+  max_repos: 600               # taille max du crawl (dépôts analysés) ; --limit peut la réduire
+  max_items_per_repo: 80
+  max_tree_entries: 30000      # au-delà, l'arbre est ignoré (dépôt monorepo géant)
+  max_topic_pages: 3           # 100 dépôts par page ; l'API plafonne à 1000 résultats / requête
+
+# Dépôts de départ (toujours analysés, même sans topic).
+seed_repos:
+  - anthropics/skills
+  - anthropics/claude-code
+  - obra/superpowers
+  - wshobson/agents
+  - disler/claude-code-hooks-mastery
+
+# Marketplaces de plugins : dépôts contenant .claude-plugin/marketplace.json.
+# L'adapter descend dans les plugins référencés (skills, hooks, commands, agents).
+marketplaces:
+  - anthropics/claude-code
+  - anthropics/claude-plugins-official
+  - wshobson/agents
+
+# Listes « awesome » : on extrait les liens github.com/owner/repo du README.
+awesome_lists:
+  - { repo: hesreallyhim/awesome-claude-code, path: README.md }
+  - { repo: travisvn/awesome-claude-skills,   path: README.md }
+  - { repo: VoltAgent/awesome-claude-code-subagents, path: README.md }
+
+# Recherche de code GitHub : limite stricte (10 req/min, 1000 résultats, token obligatoire).
+code_search:
+  enabled: true
+  max_pages: 2
+  queries:
+    - "filename:SKILL.md"
+    - "filename:hooks.json path:hooks"
+    - "filename:marketplace.json path:.claude-plugin"
+
+# Annuaire skills.sh : adapter optionnel et défensif (aucune API publique documentée).
+skills_sh:
+  enabled: true
+  base_url: https://skills.sh
+  timeout: 15
+
+# ── Détection du type ────────────────────────────────────────────────────────
+# Globs relatifs à la racine du dépôt. `**` = n'importe quelle profondeur (zéro incluse).
+detection:
+  skill:
+    - "**/SKILL.md"
+  hook:
+    - "**/hooks/hooks.json"
+    - "hooks.json"
+  hook_dirs:                   # un dossier hooks/ avec des scripts, sans hooks.json
+    - "**/hooks"
+  hook_script_ext: [".sh", ".py", ".js", ".ts", ".mjs", ".cjs"]
+
+  # Les mods n'ont PAS de format standard : chaque règle ci-dessous est une heuristique.
+  #   glob   : motif de chemin déclenchant la règle
+  #   scope  : "file" → un mod par fichier trouvé ; "dir" → un mod par dossier parent
+  #   tags   : étiquettes ajoutées à l'élément
+  mods:
+    - { id: slash-command, glob: "**/commands/*.md",           scope: dir,  tags: [slash-command] }
+    - { id: subagents,     glob: "**/agents/*.md",             scope: dir,  tags: [subagents] }
+    - { id: output-style,  glob: "**/output-styles/*.md",      scope: file, tags: [output-style] }
+    - { id: statusline,    glob: "**/statusline*.{sh,py,js,ts,json}", scope: file, tags: [statusline] }
+    - { id: statusline-dir, glob: "**/statuslines/*",          scope: file, tags: [statusline] }
+    - { id: theme,         glob: "**/themes/*.json",           scope: file, tags: [theme] }
+    - { id: keybindings,   glob: "**/keybindings*.json",       scope: file, tags: [keybindings] }
+    - { id: mcp-plugin,    glob: "**/.mcp.json",                scope: dir,  tags: [mcp, plugin] }
+    - { id: plugin,        glob: "**/.claude-plugin/plugin.json", scope: dir, tags: [plugin] }
+
+summaries:
+  max_per_run: 300             # surchargé par MAX_SUMMARIES_PER_RUN
+  batch_size: 10

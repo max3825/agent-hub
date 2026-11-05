@@ -1,0 +1,16 @@
+README.md
+skills/pdf/SKILL.md
+skills/pdf/scripts/run.py
+skills/docx/SKILL.md
+plugins/fmt/hooks/hooks.json
+plugins/fmt/hooks/guard.sh
+plugins/fmt/commands/format.md
+plugins/fmt/commands/lint.md
+plugins/fmt/.claude-plugin/plugin.json
+tools/hooks/pre-commit.sh
+statuslines/powerline.sh
+.claude-plugin/marketplace.json
+output-styles/concise.md
+node_modules/foo/SKILL.md
+tests/fixtures/SKILL.md
+src/app.py

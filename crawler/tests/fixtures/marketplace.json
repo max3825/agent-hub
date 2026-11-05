@@ -1,0 +1,11 @@
+{
+  "name": "demo-market",
+  "plugins": [
+    {"name": "local-plugin", "description": "A local one", "source": "./plugins/local-plugin"},
+    {"name": "root-plugin", "source": "./"},
+    {"name": "remote-gh", "source": {"source": "github", "repo": "someone/remote-plugin"}},
+    {"name": "remote-url", "source": {"source": "url", "url": "https://github.com/other/thing.git"}},
+    {"name": "shorthand", "source": "acme/shorthand-plugin"},
+    {"description": "no name -> ignored"}
+  ]
+}

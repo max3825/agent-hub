@@ -1,0 +1,11 @@
+{
+  "description": "Format and guard",
+  "hooks": {
+    "PostToolUse": [
+      {"matcher": "Edit|Write", "hooks": [{"type": "command", "command": "npx prettier --write \"$CLAUDE_FILE_PATH\""}]}
+    ],
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/guard.sh"}]}
+    ]
+  }
+}

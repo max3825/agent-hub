@@ -7,6 +7,7 @@ import { Tabs } from "./components/Tabs";
 import { FiltersPanel } from "./components/FiltersPanel";
 import { ItemList } from "./components/ItemList";
 import { EmptyState, SkeletonCard } from "./components/ui";
+import { TYPE_LABEL } from "./lib/format";
 import { useUiState } from "./lib/state";
 import { useTheme } from "./lib/theme";
 import { emptyFilters, type Item, type ItemType, type SortKey } from "./lib/types";
@@ -113,7 +114,13 @@ export default function App() {
                 ) : res.items.length === 0 && !res.pending ? (
                   <EmptyState title="Rien ne correspond"
                     hint={ui.q ? `Aucun ${ui.type} pour « ${ui.q} ». Essayez un terme plus court ou une autre orthographe.` : "Aucun élément avec ces filtres."}
-                    action={(hasFilters || ui.q) && <button className="btn" onClick={() => update({ q: "", filters: { ...emptyFilters } })}><X className="h-4 w-4" />Tout effacer</button>} />
+                    action={
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {ui.q && (["skill", "hook", "mod"] as ItemType[]).filter((t) => t !== ui.type && res.counts[t] > 0).map((t) => (
+                          <button key={t} className="btn btn-primary" onClick={() => changeType(t)}>{res.counts[t]} dans {TYPE_LABEL[t]}</button>
+                        ))}
+                        {(hasFilters || ui.q) && <button className="btn" onClick={() => update({ q: "", filters: { ...emptyFilters } })}><X className="h-4 w-4" />Tout effacer</button>}
+                      </div>} />
                 ) : (
                   <motion.div key={ui.type} initial={{ opacity: 0 }} animate={{ opacity: res.pending ? 0.6 : 1 }} transition={{ duration: 0.15 }}>
                     <ItemList items={res.items} terms={res.terms} lang={lang} onOpen={openItem} />

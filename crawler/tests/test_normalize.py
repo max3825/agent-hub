@@ -110,3 +110,9 @@ def test_mod_confidence_scoring():
     assert score_mod(plug, '{"name":"p"}')[0] > 0.9 and score_mod(plug, "not json")[0] < 0.5
     th = Detected(type="mod", name="t", path="themes/a.json", main_file="themes/a.json", rule="theme")
     assert score_mod(th, '{"colors": {}}')[0] > score_mod(th, '{"x":1}')[0]
+
+
+def test_detect_agents_copilot():
+    sig = detect_agents([".github/copilot-instructions.md", ".github/prompts/x.prompt.md"], [])
+    assert sig["github-copilot"].startswith("fichiers")
+    assert "github-copilot" in detect_agents([], ["works with GitHub Copilot"])

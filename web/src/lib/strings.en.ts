@@ -47,6 +47,7 @@ export const en: Record<string, string> = {
  "Chargement du modèle de recherche par sens…": "Loading the meaning-search model…",
  "Chargement…": "Loading…",
  "Chemin": "Path",
+ "Dossier du dépôt courant (.github/…) : à lancer à la racine du projet, puis commitez-le. Vérifiez la documentation de GitHub Copilot.": "Folder in the current repo (.github/…): run it at the project root, then commit it. Check the GitHub Copilot documentation.",
  "Chemin conventionnel : vérifiez la documentation de l'agent.": "Conventional path: check the agent's documentation.",
  "Chercher partout : skills, hooks, mods…": "Search everything: skills, hooks, mods…",
  "Chiffres de démonstration": "Demo figures",

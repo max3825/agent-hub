@@ -11,7 +11,12 @@ export interface InstallOption { agent: string; label: string; commands: string[
 // Dossier cible conventionnel selon l'agent et la NATURE de l'élément (tag de la règle de détection).
 // Tout ce qui n'est pas listé renvoie à « adapter depuis la source » plutôt que d'inventer un chemin.
 function targetDir(agent: string, item: Item): string | undefined {
-  if (item.type === "skill") return { "claude-code": "~/.claude/skills", codex: "~/.codex/skills" }[agent];
+  if (item.type === "skill") return { "claude-code": "~/.claude/skills", codex: "~/.codex/skills", "github-copilot": ".github/skills" }[agent];
+  if (agent === "github-copilot" && item.type === "mod") {
+    if (item.tags.includes("slash-command")) return ".github/prompts";
+    if (item.tags.includes("subagents")) return ".github/agents";
+    return undefined;
+  }
   if (agent !== "claude-code" || item.type !== "mod") return undefined;
   if (item.tags.includes("slash-command")) return "~/.claude/commands";
   if (item.tags.includes("subagents")) return "~/.claude/agents";
@@ -34,7 +39,9 @@ export function fetchSource(item: Item, target: string): string {
 }
 
 export function installOptions(item: Item): InstallOption[] {
-  return item.agents.map((agent): InstallOption => {
+  // Les skills (format SKILL.md ouvert) sont aussi proposés pour GitHub Copilot même sans signal détecté.
+  const agents = item.type === "skill" && !item.agents.includes("github-copilot") ? [...item.agents, "github-copilot"] : item.agents;
+  return agents.map((agent): InstallOption => {
     const label = agentLabel(agent);
     if (agent === "claude-code" && item.install) {
       const lines = item.install.split("\n");
@@ -42,7 +49,7 @@ export function installOptions(item: Item): InstallOption[] {
       return { agent, label, commands: lines, kind: slash ? "claude" : "shell", note: slash ? t("À saisir dans Claude Code.") : undefined };
     }
     const dir = targetDir(agent, item);
-    if (dir) return { agent, label, commands: [fetchSource(item, dir)], kind: "shell", note: t("Chemin conventionnel : vérifiez la documentation de l'agent.") };
+    if (dir) return { agent, label, commands: [fetchSource(item, dir)], kind: "shell", note: agent === "github-copilot" ? t("Dossier du dépôt courant (.github/…) : à lancer à la racine du projet, puis commitez-le. Vérifiez la documentation de GitHub Copilot.") : t("Chemin conventionnel : vérifiez la documentation de l'agent.") };
     return {
       agent, label, commands: [fetchSource(item, ".")], kind: "shell",
       note: item.type === "skill"

@@ -14,11 +14,12 @@ PATH_SIGNALS: dict[str, list[re.Pattern[str]]] = {
     "cursor": [re.compile(p) for p in (r"(^|/)\.cursor/", r"(^|/)\.cursorrules$", r"\.mdc$")],
     "gemini-cli": [re.compile(p) for p in (r"(^|/)GEMINI\.md$", r"(^|/)gemini-extension\.json$", r"(^|/)\.gemini/")],
     "windsurf": [re.compile(p) for p in (r"(^|/)\.windsurf/", r"(^|/)\.windsurfrules$")],
+    "github-copilot": [re.compile(p) for p in (r"(^|/)\.github/copilot-instructions\.md$", r"(^|/)\.github/(prompts|instructions|agents|chatmodes|skills)/", r"\.(prompt|instructions|chatmode)\.md$")],
 }
 MENTIONS = {
     "claude-code": re.compile(r"\bclaude[- ]code\b", re.I), "codex": re.compile(r"\bcodex\b", re.I),
     "cursor": re.compile(r"\bcursor\b", re.I), "gemini-cli": re.compile(r"\bgemini[- ]cli\b", re.I),
-    "windsurf": re.compile(r"\bwindsurf\b", re.I),
+    "windsurf": re.compile(r"\bwindsurf\b", re.I), "github-copilot": re.compile(r"\b(github[- ]copilot|copilot (chat|cli|agent))\b", re.I),
 }
 
 

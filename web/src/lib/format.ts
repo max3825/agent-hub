@@ -33,6 +33,7 @@ export const AGENT_META: Record<string, { label: string; short: string }> = {
   cursor: { label: "Cursor", short: "CU" },
   "gemini-cli": { label: "Gemini CLI", short: "GM" },
   windsurf: { label: "Windsurf", short: "WS" },
+  "github-copilot": { label: "GitHub Copilot", short: "GH" },
 };
 export const agentLabel = (a: string) => AGENT_META[a]?.label ?? a;
 export const agentShort = (a: string) => AGENT_META[a]?.short ?? a.slice(0, 2).toUpperCase();

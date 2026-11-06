@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from crawler.agents import detect_agents
 from crawler.models import Detected, RepoMeta, content_hash, stable_id
 from crawler.normalize import build_item, clean_text, extract_hook_commands, first_useful_sentence, infer_agents, parse_frontmatter
 

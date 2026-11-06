@@ -1,7 +1,7 @@
 """Compatibilité agents : signaux explicites plutôt que simples mentions.
 
 Chaque agent est associé à des CHEMINS caractéristiques (fichiers/dossiers de config propres à l'agent)
-et à des MENTIONS dans les topics/description/README. On renvoie {agent: raison}. Les raisons « chemin »
+et à des MENTIONS dans les topics et la description du dépôt (le README est ignoré : trop de faux positifs, ex. listes de « compatibilités »). On renvoie {agent: raison}. Les raisons « chemin »
 sont plus fiables que « mention » : l'UI les distingue.
 """
 from __future__ import annotations

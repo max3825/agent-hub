@@ -51,3 +51,22 @@ def test_filter_counts_and_disable():
 def test_default_yaml_quality_section_loads():
     q = load_config().quality
     assert q.enabled and any("\\btodo\\b" in p for p in q.placeholder_summary_patterns) and "template-skill" in q.exclude_names
+
+
+def test_app_hooks_skill_internal_and_generic_names():
+    from crawler.quality import fix_name, is_app_hook, is_skill_internal
+    def mk2(t, name, path):
+        it = mk(name, path=path); it.type = t; return it
+    assert is_app_hook(mk2("hook", "src", "web/src/hooks"))
+    assert not is_app_hook(mk2("hook", "x", ".claude/hooks"))
+    assert not is_app_hook(mk2("hook", "x", "hooks"))
+    assert is_skill_internal(mk2("mod", "a", "skills/x/agents"))
+    assert not is_skill_internal(mk2("mod", "a", "plugins/x/.claude-plugin"))
+    i = mk2("hook", "src", "hooks"); fix_name(i); assert i.name == "r"
+    i = mk2("mod", ".claude-commands", ".claude/commands"); fix_name(i); assert i.name.startswith("r")
+
+
+def test_same_repo_same_summary_deduped():
+    a, b = mk("a", path="x/a"), mk("b", path="x/b")
+    kept, why = filter_items([a, b], QualityCfg())
+    assert len(kept) == 1 and why["same_repo_same_summary"] == 1

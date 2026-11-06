@@ -149,7 +149,7 @@ def build_item(
     url = f"https://github.com/{meta.full_name}/{kind}/{ref}/{d.path}" if d.path not in {"", "."} else f"https://github.com/{meta.full_name}"
     allowed = fm.get("allowed-agents") or fm.get("agents")
     declared = [str(a) for a in allowed] if isinstance(allowed, list) else []
-    signals = detect_agents(paths or [], [" ".join(meta.topics), meta.description or ""], declared, d.type)
+    signals = detect_agents(paths or [], [" ".join(meta.topics), meta.description or ""], declared, d.type, d.path)
     agent_list = agents or list(signals)
     md = body if d.main_file.lower().endswith(".md") else ""
     preview = make_preview(md or readme) or None

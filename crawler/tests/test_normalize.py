@@ -117,3 +117,13 @@ def test_detect_agents_copilot():
     sig = detect_agents([".github/copilot-instructions.md", ".github/prompts/x.prompt.md"], [])
     assert sig["github-copilot"].startswith("fichiers")
     assert "github-copilot" in detect_agents([], ["works with GitHub Copilot"])
+
+
+def test_agent_signals_scoped_to_item():
+    paths = ["AGENTS.md", "skills/a/SKILL.md", "skills/b/SKILL.md", "skills/b/AGENTS.md", ".cursor/rules/x.mdc", "tools/y/.codex/c.md"]
+    a = detect_agents(paths, [], item_path="skills/a")
+    assert "codex" not in a                      # AGENTS.md racine = guide du dépôt, pas un signal pour l'élément
+    assert "cursor" in a                         # config .cursor/ à la racine : s'applique à tout le dépôt
+    assert "codex" in detect_agents(paths, [], item_path="skills/b")
+    assert "codex" not in detect_agents(paths, [], item_path="skills/a")
+    assert "codex" in detect_agents(paths, [])   # sans item_path : comportement historique

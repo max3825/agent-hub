@@ -176,7 +176,7 @@ Le site utilise `base: "./"` et des URLs de requête : il se déploie tel quel s
 - Le scan de sécurité est heuristique (voir plus haut).
 - `skills.sh` : aucune API publique documentée → l'adapter tente quelques endpoints puis la page HTML ; il peut ne rien renvoyer.
 - Recherche de code GitHub : 1000 résultats max/requête, ~10 req/min, token obligatoire.
-- Agents compatibles : fichiers propres à l'agent (AGENTS.md, .cursor/…, .github/copilot-instructions.md…), déclaration, topics ou description du dépôt ; Claude Code par défaut. Le README est ignoré (trop de faux positifs). Déduit, pas vérifié.
+- Agents compatibles : déclaration, config propre à l'agent dans le dossier de l'élément ou à la racine (`.cursor/`, `.codex/`, `.github/prompts`…), topics ou description du dépôt ; Claude Code par défaut. Les fichiers d'instructions du dépôt (`AGENTS.md` racine…) et le README sont ignorés (faux positifs). Déduit, pas vérifié.
 - Les `firstSeen` (« Nouveautés ») reposent sur `.cache/` (cache Actions) et, à défaut, sur le dernier `data/items.json` ; si les deux disparaissent, tout redevient « nouveau ».
 - Les 59 entrées de démo sont fictives.
 - Le crawl complet n'a pas pu être validé de bout en bout contre l'API GitHub dans l'environnement de développement (accès par dépôt bloqué) : voir le récap de livraison.
